@@ -91,12 +91,14 @@
         };
 
         const LotteryLogic = {
-            draw(type) {
+            draw(type, isPlayerAction = false) { // 增加一個參數區分是否為玩家機選
                 switch(type) {
                     case "大樂透":
                     case "49樂合彩":
                         let b49 = this.sample(1, 49, 7);
-                        return { main: b49.slice(0, 6).sort((a,b)=>a-b), special: b49[6] };
+                        return {main: b49.slice(0, 6).sort((a,b)=>a-b), 
+                special: isPlayerAction ? null : b49[6] 
+            };
                     case "威力彩":
                         return { main: this.sample(1, 38, 6).sort((a,b)=>a-b), special: Math.floor(Math.random()*8)+1 };
                     case "今彩539":
@@ -125,11 +127,15 @@
                 switch(type) {
                     case "大樂透":
                         let s = player.special === drawn.special;
-                        if(m===6) return 100000000;
-                        if(m===5 && s) return 1000000;
-                        if(m===5) return 50000;
-                        if(m===3 && s) return 1000;
-                        return m >= 3 ? 400 : 0;
+                        if (m === 6) return 100000000; // 頭獎
+                        if (m === 5 && s) return 2000000; // 貳獎
+                        if (m === 5) return 50000;       // 參獎
+                        if (m === 4 && s) return 15000;     // 肆獎
+                        if (m === 4) return 2000;        // 伍獎
+                        if (m === 3 && s) return 1000;      // 陸獎
+                        if (m === 3) return 400;         // 普獎
+                        if (m === 2 && s) return 400;       // 柒獎
+                        return 0;
                     case "威力彩":
                         let m2 = player.special === drawn.special;
                         if(m===6 && m2) return 200000000;
@@ -517,15 +523,23 @@
             }
 
             // 1. 生成機選並放入購物車
-            for(let i=0; i<state.ticketCount; i++) {
-                let drawData = LotteryLogic.draw(state.selectedGame);
-                state.cart.push({ type: state.selectedGame, nums: drawData.main, special: drawData.special });
+            for(let i = 0; i < state.ticketCount; i++) {
+                // 呼叫抽獎邏輯產生隨機號碼，傳入 true 表示這是「玩家的機選票券」
+                let quickPickData = LotteryLogic.draw(state.selectedGame, true); 
+                state.cart.push({ 
+                type: state.selectedGame, 
+                nums: quickPickData.main, 
+                special: quickPickData.special 
+                });
             }
 
             // 2. 開獎池 (本期所有相關遊戲)
             const drawnPool = {};
             const activeGames = [...new Set(state.cart.map(t => t.type))];
-            activeGames.forEach(g => drawnPool[g] = LotteryLogic.draw(g));
+            activeGames.forEach(g => {
+            // 這裡不傳 true，代表這是「官方開獎號碼」，會產生大樂透/威力彩的特別號
+            drawnPool[g] = LotteryLogic.draw(g, false); 
+            });
 
             // 3. 計算獎金
             let totalWon = 0;
