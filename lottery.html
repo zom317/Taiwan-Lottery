@@ -242,6 +242,46 @@
                         <div class="text-center"><button onclick="changeScreen('MAIN_MENU')" class="bg-gray-800 text-white px-10 py-3 rounded-full font-bold">返回主選單</button></div>
                     </div>
                 `;
+            } else if (state.currentScreen === 'RULES') {
+                container.innerHTML = `
+                        <div class="max-w-2xl mx-auto pb-10">
+                                <h2 class="text-3xl font-bold text-center mb-6 text-green-600">📜 遊戲玩法說明</h2>
+                                
+                                <div class="space-y-6 text-gray-700">
+                                        <section class="bg-white p-5 rounded-xl border shadow-sm">
+                                                <h3 class="font-bold text-lg text-indigo-600 mb-2">💰 基礎規則</h3>
+                                                <ul class="list-disc ml-5 space-y-1">
+                                                        <li>初始金額為 <strong>$1,000</strong>，每張彩券投注金額為 <strong>$50</strong>。</li>
+                                                        <li>您可以選擇「自選號碼」或直接設定「機選張數」。</li>
+                                                        <li>點擊「立即結算」後，系統會自動幫您對獎並更新餘額。</li>
+                                                </ul>
+                                        </section>
+        
+                                        <section class="bg-white p-5 rounded-xl border shadow-sm">
+                                                <h3 class="font-bold text-lg text-indigo-600 mb-2">🎰 各遊戲簡介</h3>
+                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                                        <div class="border-l-4 border-yellow-400 pl-3">
+                                                                <p class="font-bold">大樂透 / 威力彩</p>
+                                                                <p>台灣最熱門遊戲，獎金最高。威力彩需額外選擇第二區號碼。</p>
+                                                        </div>
+                                                        <div class="border-l-4 border-green-400 pl-3">
+                                                                <p class="font-bold">今彩539 / 樂合彩</p>
+                                                                <p>天天開獎，中獎率相對較高，適合穩紮穩打。</p>
+                                                        </div>
+                                                        <div class="border-l-4 border-blue-400 pl-3">
+                                                                <p class="font-bold">三星彩 / 四星彩</p>
+                                                                <p>需預測正確的數字與「順序」，非常考驗直覺。</p>
+                                                        </div>
+                                                        <div class="border-l-4 border-red-400 pl-3">
+                                                                <p class="font-bold">BINGO BINGO</p>
+                                                                <p>每 5 分鐘開獎一次，電腦模擬快速累積財富的好地方。</p>
+                                                        </div>
+                                                </div>
+                                        </section>
+        
+                                        <section class="bg-amber-50 p-5 rounded-xl border border-amber-200">
+                                                <p class="text-sm text-amber-800">
+                                                        <strong>⚠️ 注意事項：</strong> 本網頁僅供模擬娛樂
             } else if (state.currentScreen === 'PLAYING') {
                 renderGamePlay(container);
             } else if (state.currentScreen === 'RESULTS') {
