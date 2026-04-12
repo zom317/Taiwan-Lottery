@@ -31,7 +31,6 @@
             </div>
             <div class="text-right">
                 <div class="text-sm opacity-80 font-bold">TAIWAN LOTTERY SIMULATOR</div>
-                <div id="pr-display" class="text-xs bg-indigo-500 px-2 py-0.5 rounded mt-1">PR 值: --</div>
             </div>
             <button id="music-toggle" onclick="toggleMusic()" class="bg-indigo-500 hover:bg-indigo-400 p-2 rounded-full transition-colors">
                 <span id="music-icon">🔇</span>
@@ -51,7 +50,6 @@
         const state = {
             wallet: 1000,
             highScore: 1000,
-            leaderboard: [],
             currentScreen: 'MAIN_MENU',
             selectedGame: '',
             cart: [], 
@@ -68,27 +66,12 @@
 
         const Storage = {
             saveScore(score) {
-                let board = JSON.parse(localStorage.getItem('lottery_leaderboard') || '[]');
-                const date = new Date().toLocaleDateString();
-                board.push({ score, date });
-                board.sort((a, b) => b.score - a.score);
-                board = board.slice(0, 10);
-                localStorage.setItem('lottery_leaderboard', JSON.stringify(board));
                 localStorage.setItem('lottery_high_score', Math.max(score, state.highScore));
-                state.leaderboard = board;
             },
             load() {
                 state.highScore = parseInt(localStorage.getItem('lottery_high_score') || '1000');
-                state.leaderboard = JSON.parse(localStorage.getItem('lottery_leaderboard') || '[]');
-                if(state.leaderboard.length === 0) {
-                    state.leaderboard = [{score: 100000000, date: '系統'}, {score: 1000, date: '起始'}];
                 }
             },
-            calculatePR(score) {
-                const allScores = state.leaderboard.map(i => i.score);
-                const below = allScores.filter(s => s < score).length;
-                return Math.floor((below / allScores.length) * 100);
-            }
         };
 
         const LotteryLogic = {
@@ -190,7 +173,6 @@
         function updateWallet() {
             document.getElementById('wallet-display').innerText = `$${state.wallet.toLocaleString()}`;
             document.getElementById('high-score-display').innerText = `$${state.highScore.toLocaleString()}`;
-            document.getElementById('pr-display').innerText = `PR 值: ${Storage.calculatePR(state.wallet)}`;
         }
         // --- 音樂控制邏輯 ---
         const bgm = document.getElementById('bgm');
