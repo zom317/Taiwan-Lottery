@@ -212,32 +212,51 @@
             document.getElementById('wallet-display').innerText = `$${state.wallet.toLocaleString()}`;
             document.getElementById('high-score-display').innerText = `$${state.highScore.toLocaleString()}`;
         }
-        // --- 音樂控制邏輯 ---
+        // --- 超級程式王：音樂控制優化版 ---
         const bgm = document.getElementById('bgm');
         const musicIcon = document.getElementById('music-icon');
         let isMusicPlaying = false;
-
-        // 設置初始音量 (0.0 到 1.0)
+        
+        // 設置初始音量
         bgm.volume = 0.3;
-
+        
         function toggleMusic() {
             if (isMusicPlaying) {
                 bgm.pause();
                 musicIcon.innerText = '🔇';
+                isMusicPlaying = false;
             } else {
-                bgm.play().catch(e => console.log("等待使用者互動以播放音樂"));
-                musicIcon.innerText = '🎵';
+                // 使用 Promise 處理播放請求，避免瀏覽器報錯
+                const playPromise = bgm.play();
+        
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        musicIcon.innerText = '🎵';
+                        isMusicPlaying = true;
+                    }).catch(error => {
+                        console.error("音樂播放失敗，原因：", error);
+                        showToast("請先點擊頁面以啟用音樂");
+                    });
+                }
             }
-            isMusicPlaying = !isMusicPlaying;
         }
 
-        // 增強：當玩家點擊畫面任何地方，如果音樂還沒開，就幫他開（解決瀏覽器政策）
-        document.addEventListener('click', function () {
-            if (!isMusicPlaying && bgm.paused) {
-                // 如果你希望第一次點擊就自動放音樂，可以取消下面這行的註解
-                toggleMusic();
-            }
-        }, { once: true }); // 只執行一次
+        // 核心修正：處理瀏覽器 Autoplay 政策
+        // 當使用者第一次點擊頁面任何地方，嘗試解除音訊鎖定
+        function initAudio() {
+            // 建立一個一次性的事件監聽
+            document.addEventListener('click', function() {
+                // 如果目前沒在放，且原本是關閉狀態，嘗試預熱音訊
+                if (!isMusicPlaying) {
+                    // 這裡可以選擇自動播放，或僅僅是準備好 audio context
+                    // 為了好的使用者體驗，我們在第一次點擊時主動播放
+                    toggleMusic();
+                }
+            }, { once: true });
+        }
+
+        // 在頁面載入後初始化
+        window.addEventListener('load', initAudio);
 
         function render() {
             const container = document.getElementById('screen-content');
