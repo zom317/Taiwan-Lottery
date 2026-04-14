@@ -105,14 +105,6 @@
             load() {
                 state.highScore = parseInt(localStorage.getItem('lottery_high_score') || '1000');
             },
-            calculatePR(score) {
-                if (score < 1000) return 'PR 1 (運氣有點差喔)';
-                if (score < 5000) return 'PR 30 (再接再厲)';
-                if (score < 50000) return 'PR 60 (小確幸)';
-                if (score < 1000000) return 'PR 85 (偏財運旺)';
-                if (score < 100000000) return 'PR 95 (天選之人)';
-                return 'PR 99.9 (財富自由)';
-            }
         };
 
         const LotteryLogic = {
@@ -151,7 +143,8 @@
 
                 switch (type) {
                     case "大樂透": {
-                        let s = player.special === drawn.special;
+                        // 大樂透的「特別號」判斷方式：玩家沒有獨立選「特別號」，而是玩家選的 6 個號碼中，是否有包含開出的特別號
+                        let s = player.nums.includes(drawn.special);
                         if (m === 6) return 100000000; // 頭獎
                         if (m === 5 && s) return 8000000; // 貳獎
                         if (m === 5) return 7000000;       // 參獎
@@ -174,6 +167,7 @@
                         if (m === 3) return 200;           // 玖獎
                         if (m === 2 && s) return 200;       // 捌獎
                         if (m === 1 && s) return 100;       // 普獎
+                        if (m === 0 && s) return 100;       // 普獎 (第一區0號+第二區命中)
                         return 0;
                     }
                     case "今彩539":
@@ -182,10 +176,22 @@
                         if (m === 3) return 300;
                         if (m === 2) return 50;
                         return 0;
-                    case "3星彩":
-                        return JSON.stringify(player.nums) === JSON.stringify(drawn.main) ? 12500 : 0;
-                    case "4星彩":
-                        return JSON.stringify(player.nums) === JSON.stringify(drawn.main) ? 125000 : 0;
+                    case "3星彩": {
+                        const p = player.nums;
+                        const d = drawn.main;
+                        if (p[0] === d[0] && p[1] === d[1] && p[2] === d[2]) return 5000;
+                        if (p[1] === d[1] && p[2] === d[2]) return 500;
+                        if (p[2] === d[2]) return 50;
+                        return 0;
+                    }
+                    case "4星彩": {
+                        const p = player.nums;
+                        const d = drawn.main;
+                        if (p[0] === d[0] && p[1] === d[1] && p[2] === d[2] && p[3] === d[3]) return 50000;
+                        if (p[1] === d[1] && p[2] === d[2] && p[3] === d[3]) return 5000;
+                        if (p[2] === d[2] && p[3] === d[3]) return 500;
+                        return 0;
+                    }
                     case "BINGO":
                         return m >= 5 ? 500 * m : 0;
                 }
@@ -238,42 +244,55 @@
 
             if (state.currentScreen === 'MAIN_MENU') {
                 container.innerHTML = `
-                    <div class="text-center mt-6 flex flex-col items-center">
-                        <h1 class="text-5xl font-bold mb-10">台灣公益彩券模擬</h1>
-                        
-                        <div class="grid grid-cols-2 gap-6 max-w-2xl w-full mx-auto mb-10">
-                            ${GAMES.map(g => `<button onclick="selectGame('${g}')" class="bg-white hover:bg-indigo-50 border-2 border-indigo-100 p-6 rounded-2xl font-black text-2xl shadow-md transition-all active:scale-95">${g}</button>`).join('')}
-                        </div>
-                        
-                        <div class="flex justify-center gap-6 mb-10">
-                            <button onclick="checkout()" class="bg-amber-500 text-white px-12 py-4 rounded-full font-black text-2xl shadow-xl hover:bg-amber-600 active:scale-95">確定購買 (共 $${(state.cart.length * state.betAmount)})</button>
-                            <button onclick="changeScreen('RULES')" class="bg-green-500 text-white px-12 py-4 rounded-full font-black text-2xl shadow-xl hover:bg-green-600 active:scale-95">玩法介紹</button>
-                        </div>
-
-                        <div class="w-full max-w-2xl bg-white border-2 border-indigo-100 rounded-2xl p-6 shadow-sm text-left">
-                            <div class="flex justify-between items-center mb-4">
-                                <h2 class="text-2xl font-bold text-indigo-800">🛒 購物車清單</h2>
-                                <span class="text-gray-500 font-bold">共 ${state.cart.length} 注</span>
+                    <div class="flex flex-row w-full h-full gap-6 px-4">
+                        <!-- Left Layout -->
+                        <div class="flex-grow flex flex-col items-center mt-4 overflow-y-auto pr-2 scroll-container">
+                            <h1 class="text-4xl font-bold mb-8">台灣公益彩券模擬</h1>
+                            
+                            <div class="grid grid-cols-2 gap-4 max-w-xl w-full mx-auto mb-8">
+                                ${GAMES.map(g => `<button onclick="selectGame('${g}')" class="bg-white hover:bg-indigo-50 border-2 border-indigo-100 p-4 rounded-2xl font-black text-xl shadow-md transition-all active:scale-95">${g}</button>`).join('')}
                             </div>
                             
-                            <div class="space-y-3 max-h-64 overflow-y-auto scroll-container pr-2">
-                                ${state.cart.length === 0 ? `<p class="text-center text-gray-400 py-6 font-bold">購物車目前是空的喔！</p>` : state.cart.map((t, idx) => `
-                                    <div class="p-4 bg-gray-50 border rounded-xl flex justify-between items-center hover:bg-white transition-colors">
-                                        <div class="flex flex-col">
-                                            <div class="flex items-center gap-2 mb-1">
-                                                <span class="text-xs font-bold bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded">第 ${idx + 1} 張</span>
-                                                <span class="font-black text-lg text-gray-700">${t.type}</span>
+                            <div class="flex justify-center gap-4 mb-8">
+                                <button onclick="checkout()" class="bg-amber-500 text-white px-8 py-3 rounded-full font-black text-xl shadow-xl hover:bg-amber-600 active:scale-95">確定購買 (共 $${state.cart.reduce((s, t) => s + (["3星彩", "4星彩"].includes(t.type) ? 25 : 50), 0)})</button>
+                                <button onclick="changeScreen('RULES')" class="bg-green-500 text-white px-8 py-3 rounded-full font-black text-xl shadow-xl hover:bg-green-600 active:scale-95">玩法介紹</button>
+                            </div>
+
+                            <div class="w-full max-w-xl bg-white border-2 border-indigo-100 rounded-2xl p-5 shadow-sm text-left mb-6">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h2 class="text-xl font-bold text-indigo-800">🛒 購物車清單</h2>
+                                    <span class="text-gray-500 font-bold">共 ${state.cart.length} 注</span>
+                                </div>
+                                
+                                <div class="space-y-3 max-h-48 overflow-y-auto scroll-container pr-2">
+                                    ${state.cart.length === 0 ? `<p class="text-center text-gray-400 py-6 font-bold">購物車目前是空的喔！</p>` : state.cart.map((t, idx) => `
+                                        <div class="p-3 bg-gray-50 border rounded-xl flex justify-between items-center hover:bg-white transition-colors">
+                                            <div class="flex flex-col">
+                                                <div class="flex items-center gap-2 mb-1">
+                                                    <span class="text-[10px] font-bold bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded">第 ${idx + 1} 張</span>
+                                                    <span class="font-black text-base text-gray-700">${t.type}</span>
+                                                </div>
+                                                <div class="flex gap-1 flex-wrap">
+                                                    ${t.nums.map(n => `<span class="text-xs font-mono w-6 h-6 bg-white border border-gray-300 rounded-full flex items-center justify-center font-bold">${n}</span>`).join('')}
+                                                    ${t.special ? `<span class="text-xs font-mono w-6 h-6 bg-red-50 border border-red-200 text-red-600 rounded-full flex items-center justify-center font-bold">${t.special}</span>` : ''}
+                                                </div>
                                             </div>
-                                            <div class="flex gap-1 flex-wrap">
-                                                ${t.nums.map(n => `<span class="text-sm font-mono w-7 h-7 bg-white border border-gray-300 rounded-full flex items-center justify-center font-bold">${n}</span>`).join('')}
-                                                ${t.special ? `<span class="text-sm font-mono w-7 h-7 bg-red-50 border border-red-200 text-red-600 rounded-full flex items-center justify-center font-bold">${t.special}</span>` : ''}
-                                            </div>
+                                            <button onclick="deleteCartItem(${idx})" class="w-8 h-8 bg-red-100 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-colors flex items-center justify-center font-bold shadow-sm text-sm">
+                                                ×
+                                            </button>
                                         </div>
-                                        <button onclick="deleteCartItem(${idx})" class="w-10 h-10 bg-red-100 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-colors flex items-center justify-center font-bold shadow-sm">
-                                            X
-                                        </button>
-                                    </div>
-                                `).join('')}
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Form Iframe -->
+                        <div class="w-80 flex-shrink-0 bg-white rounded-2xl border-2 border-indigo-100 shadow-sm overflow-hidden h-[95%] mt-4 flex flex-col">
+                            <div class="bg-indigo-50 border-b border-indigo-100 py-2 px-4 shadow-sm flex-shrink-0 flex justify-between items-center">
+                                <h3 class="font-bold text-sm text-indigo-800 flex items-center"><span class="mr-2">📋</span> 意見回饋</h3>
+                            </div>
+                            <div class="flex-grow w-full h-full relative">
+                                <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSd4paVdXXPSYkk1sYw2-MK2vy5aLaS56F_fjmUkCu6J--KMHA/viewform?embedded=true" class="absolute inset-0 w-full h-full" frameborder="0" marginheight="0" marginwidth="0">載入中…</iframe>
                             </div>
                         </div>
                     </div>
@@ -287,7 +306,7 @@
                                         <section class="bg-white p-5 rounded-xl border shadow-sm">
                                                 <h3 class="font-bold text-lg text-indigo-600 mb-2">💰 基礎規則</h3>
                                                 <ul class="list-disc ml-5 space-y-1">
-                                                        <li>初始金額為 <strong>$1,000</strong>，每張彩券投注金額為 <strong>$50</strong>。</li>
+                                                        <li>初始金額為 <strong>$1,000</strong>，大樂透、威力彩等每注 <strong>$50</strong>；3星/4星彩每注 <strong>$25</strong>。</li>
                                                         <li>您可以選擇「自選號碼」或直接設定「機選張數」。</li>
                                                         <li>點擊「立即結算」後，系統會自動幫您對獎並更新餘額。</li>
                                                 </ul>
@@ -329,12 +348,11 @@
             } else if (state.currentScreen === 'RESULTS') {
                 renderResults(container);
             } else if (state.currentScreen === 'BANKRUPT') {
-                const pr = Storage.calculatePR(state.highScore);
                 container.innerHTML = `
                     <div class="text-center mt-16 animate-bounce">
                         <h1 class="text-8xl mb-6">💸</h1>
                         <h2 class="text-4xl font-bold text-red-600 mb-2">您已破產！</h2>
-                        <p class="text-gray-500 mb-8">雖然沒錢了，但你曾經的最高紀錄 PR 值為: <span class="font-bold text-indigo-600">${pr}</span></p>
+                        <p class="text-gray-500 mb-8">雖然沒錢了，但你曾經的最高紀錄為: <span class="font-bold text-indigo-600">$${state.highScore.toLocaleString()}</span></p>
                         <button onclick="resetGame()" class="bg-yellow-500 text-white text-xl px-12 py-4 rounded-full font-bold shadow-xl hover:scale-105 transition-transform">重新領取 $1000</button>
                     </div>
                 `;
@@ -419,8 +437,18 @@
                 "大樂透": [["01~49選六個號碼 + 系統自動分配一個隱藏號碼「特別號」", ""], ["6個號碼", "頭獎 1億"], ["5個+特別號", "200萬"], ["5個號碼", "5萬"], ["4個+特別號", "1.5萬"], ["3個+特別號", "1,000"], ["3個號碼", "400"]],
                 "威力彩": [["01~38選六個號碼 + 01~08選一個號碼", ""], ["第一區6個+第二區", "頭獎 2億"], ["第一區6個", "2,000萬"], ["第一區3個+第二區", "400"], ["普獎", "100"]],
                 "今彩539": [["01~39選五個號碼", ""], ["5個號碼", "800萬"], ["4個號碼", "2萬"], ["3個號碼", "300"], ["2個號碼", "50"]],
-                "3星彩": [["選一個三位數", ""], ["數字與順序皆全中", "12,500"]],
-                "4星彩": [["選一個四位數", ""], ["數字與順序皆全中", "125,000"]],
+                "3星彩": [
+                    ["選一個三位數", ""],
+                    ["全中 (壹獎)", "5,000"],
+                    ["末2碼對位 (貳獎)", "500"],
+                    ["末1碼對位 (參獎)", "50"]
+                ],
+                "4星彩": [
+                    ["選一個四位數", ""],
+                    ["全中 (壹獎)", "50,000"],
+                    ["末3碼對位 (貳獎)", "5,000"],
+                    ["末2碼對位 (參獎)", "500"]
+                ],
                 "BINGO": [["中 10 號", "5,000"], ["中 5-9 號", "每號 500"]]
             };
 
@@ -601,8 +629,8 @@
             for (let i = 0; i < state.manualTicketCount; i++) {
                 state.cart.push({
                     type: state.selectedGame,
-                    nums: ["3星彩", "4星彩"].includes(state.selectedGame) 
-                        ? [...state.playerSelection] 
+                    nums: ["3星彩", "4星彩"].includes(state.selectedGame)
+                        ? [...state.playerSelection]
                         : [...state.playerSelection].sort((a, b) => a - b),
                     special: state.playerSpecial,
                     betType: state.playerSelection.length // 紀錄是幾合
@@ -626,7 +654,7 @@
                 return;
             }
 
-            const totalCost = state.cart.length * state.betAmount;
+            const totalCost = state.cart.reduce((s, t) => s + (["3星彩", "4星彩"].includes(t.type) ? 25 : 50), 0);
             if (state.wallet < totalCost) {
                 showToast("餘額不足！");
                 return;
@@ -661,6 +689,7 @@
 
             // 清空購物車
             state.cart = [];
+
             render();
             changeScreen('RESULTS');
         }
