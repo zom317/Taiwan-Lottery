@@ -46,7 +46,7 @@
     </style>
 </head>
 <audio id="bgm" loop>
-    <source src="bgm.mp3" type="audio/mpeg">
+    <source src="背景音樂 無版權音樂 免費音樂 BGM音樂下載 歌名_ Sunset Paradise  作者_ Wonki  輕快   NCS Music.mp3" type="audio/mpeg">
     您的瀏覽器不支援音訊播放。
 </audio>
 
@@ -93,7 +93,8 @@
             manualTicketCount: 1,
             lastResults: null,
             selectedPrizeGame: null,
-            betAmount: 50
+            betAmount: 50,
+            quizCompleted: false
         };
 
         const GAMES = ["大樂透", "威力彩", "今彩539", "3星彩", "4星彩", "BINGO"];
@@ -104,6 +105,7 @@
             },
             load() {
                 state.highScore = parseInt(localStorage.getItem('lottery_high_score') || '1000');
+                state.quizCompleted = localStorage.getItem('lottery_quiz_completed') === 'true';
             },
         };
 
@@ -286,13 +288,96 @@
                             </div>
                         </div>
 
-                        <!-- Right Column: Form Iframe -->
-                        <div class="w-80 flex-shrink-0 bg-white rounded-2xl border-2 border-indigo-100 shadow-sm overflow-hidden h-[95%] mt-4 flex flex-col">
-                            <div class="bg-indigo-50 border-b border-indigo-100 py-2 px-4 shadow-sm flex-shrink-0 flex justify-between items-center">
-                                <h3 class="font-bold text-sm text-indigo-800 flex items-center"><span class="mr-2">📋</span> 意見回饋</h3>
+                        <!-- Right Column: Quiz -->
+                        <div class="w-80 flex-shrink-0 bg-white rounded-2xl border-2 border-indigo-100 shadow-sm overflow-hidden h-[95%] mt-4 flex flex-col relative text-left">
+                            <div class="bg-indigo-50 border-b border-indigo-100 py-3 px-4 shadow-sm flex-shrink-0 flex justify-between items-center">
+                                <h3 class="font-bold text-sm text-indigo-800 flex items-center"><span class="mr-2">📝</span> 防賭徒謬誤測驗</h3>
+                                <span class="text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded">可得(答對數×50)元</span>
                             </div>
-                            <div class="flex-grow w-full h-full relative">
-                                <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSd4paVdXXPSYkk1sYw2-MK2vy5aLaS56F_fjmUkCu6J--KMHA/viewform?embedded=true" class="absolute inset-0 w-full h-full" frameborder="0" marginheight="0" marginwidth="0">載入中…</iframe>
+                            <div class="flex-grow w-full h-full overflow-y-auto scroll-container p-4 bg-gray-50 text-sm">
+                                ${state.quizCompleted ? `
+                                    <div class="text-center mt-10">
+                                        <h3 class="text-4xl mb-4">🎉</h3>
+                                        <h3 class="text-xl font-bold text-green-600 mb-2">測驗已完成</h3>
+                                        <p class="text-gray-500">獎勵已經發送至錢包囉！</p>
+                                    </div>
+                                ` : `
+                                    <div class="mb-4 text-xs text-gray-700 bg-white p-3 rounded-lg border border-indigo-100 leading-relaxed shadow-sm">
+                                        <strong class="text-indigo-700">💡什麼是賭徒謬誤？</strong><br>主張由於某事發生了很多次，因此接下來不太可能發生（或很久沒發生，就很可能會發生）。<br>這就如同拋一枚公平的硬幣，連續多次正面，並不影響下次拋出正反面的機率。
+                                    </div>
+                                    <form id="quiz-form" onsubmit="submitQuiz(event)" class="space-y-6">
+                                        <div class="space-y-2">
+                                            <p class="font-bold text-gray-800">1. 購買彩券除了娛樂之外，其中一個重要的社會意義是什麼？</p>
+                                            <label class="block"><input type="radio" name="q1" value="A" class="mr-2">A 中獎致富的唯一途徑</label>
+                                            <label class="block"><input type="radio" name="q1" value="B" class="mr-2" required>B 支持社會公益事業</label>
+                                            <label class="block"><input type="radio" name="q1" value="C" class="mr-2">C 證明個人運氣比別人好</label>
+                                            <label class="block"><input type="radio" name="q1" value="D" class="mr-2">D 快速解決財務問題</label>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <p class="font-bold text-gray-800">2. 從數學機率的角度來看，購買一張彩券中頭獎的機率通常是：</p>
+                                            <label class="block"><input type="radio" name="q2" value="A" class="mr-2">A 非常高，只要多買幾張</label>
+                                            <label class="block"><input type="radio" name="q2" value="B" class="mr-2" required>B 極低，接近於零</label>
+                                            <label class="block"><input type="radio" name="q2" value="C" class="mr-2">C 和擲硬幣一樣，有50%的機率</label>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <p class="font-bold text-gray-800">3. 將多少比例的預算用於購買彩券，才是比較理性的行為？</p>
+                                            <label class="block"><input type="radio" name="q3" value="A" class="mr-2">A 超過收入的50%</label>
+                                            <label class="block"><input type="radio" name="q3" value="B" class="mr-2" required>B 40%~50%之間</label>
+                                            <label class="block"><input type="radio" name="q3" value="C" class="mr-2">C 僅拿閒置娛樂預算且不影響生活</label>
+                                            <label class="block"><input type="radio" name="q3" value="D" class="mr-2">D 越多越好</label>
+                                        </div>
+                                        <div class="space-y-2 bg-yellow-50 p-2 rounded">
+                                            <p class="font-bold text-gray-800">4. <span class="text-xs text-red-500 font-bold">(可複選)</span> 購買彩券動機若是改善生活，更穩健長期的財務規劃方式應包含？</p>
+                                            <label class="block"><input type="checkbox" name="q4" value="A" class="mr-2">A 定期儲蓄與投資</label>
+                                            <label class="block"><input type="checkbox" name="q4" value="B" class="mr-2">B 依賴購買大量彩券</label>
+                                            <label class="block"><input type="checkbox" name="q4" value="C" class="mr-2">C 制定詳細預算和支出計畫</label>
+                                            <label class="block"><input type="checkbox" name="q4" value="D" class="mr-2">D 尋求專業理財建議</label>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <p class="font-bold text-gray-800">5. 關於下列敘述，哪項最可能有「賭徒謬誤」？</p>
+                                            <label class="block"><input type="radio" name="q5" value="A" class="mr-2" required>A 相信連輸越多下次中獎機率越高</label>
+                                            <label class="block"><input type="radio" name="q5" value="B" class="mr-2">B 認為中獎號碼是可預測的</label>
+                                            <label class="block"><input type="radio" name="q5" value="C" class="mr-2">C 理解每次開獎為獨立事件</label>
+                                            <label class="block"><input type="radio" name="q5" value="D" class="mr-2">D 中獎者一定有特別秘訣</label>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <p class="font-bold text-gray-800">6. 下列哪一種行為最符合購買彩券的「理性態度」？</p>
+                                            <label class="block"><input type="radio" name="q6" value="A" class="mr-2" required>A 視為低機率樂透遊戲，僅用閒錢參與</label>
+                                            <label class="block"><input type="radio" name="q6" value="B" class="mr-2">B 為追回輸掉的錢不斷增加投入</label>
+                                            <label class="block"><input type="radio" name="q6" value="C" class="mr-2">C 深信研究歷史數據可預測下期號碼</label>
+                                            <label class="block"><input type="radio" name="q6" value="D" class="mr-2">D 為致富犧牲日常必需品</label>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <p class="font-bold text-gray-800">7. 如果連續多期未中獎，理性的態度應該是：</p>
+                                            <label class="block"><input type="radio" name="q7" value="A" class="mr-2">A 根據賭徒謬誤，下期機率將提高</label>
+                                            <label class="block"><input type="radio" name="q7" value="B" class="mr-2" required>B 接受開獎為獨立事件，維持既定預算</label>
+                                            <label class="block"><input type="radio" name="q7" value="C" class="mr-2">C 立即投入更多資金</label>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <p class="font-bold text-gray-800">8. 購買彩券時哪種行為屬於高風險？</p>
+                                            <label class="block"><input type="radio" name="q8" value="A" class="mr-2">A 買小額彩券作為休閒</label>
+                                            <label class="block"><input type="radio" name="q8" value="B" class="mr-2" required>B 使用信用卡或借貸買大量彩券</label>
+                                            <label class="block"><input type="radio" name="q8" value="C" class="mr-2">C 設好購買上限金額</label>
+                                            <label class="block"><input type="radio" name="q8" value="D" class="mr-2">D 控制在娛樂預算內</label>
+                                        </div>
+                                        <div class="space-y-2 bg-yellow-50 p-2 rounded">
+                                            <p class="font-bold text-gray-800">9. <span class="text-xs text-red-500 font-bold">(可複選)</span> 哪些因素可確保您以健康心態參與？</p>
+                                            <label class="block"><input type="checkbox" name="q9" value="A" class="mr-2">A 只買負擔得起的金額</label>
+                                            <label class="block"><input type="checkbox" name="q9" value="B" class="mr-2">B 視為休閒而非投資</label>
+                                            <label class="block"><input type="checkbox" name="q9" value="C" class="mr-2">C 事先規劃中獎後的用途</label>
+                                            <label class="block"><input type="checkbox" name="q9" value="D" class="mr-2">D 當期未中會馬上加倍投入</label>
+                                            <label class="block"><input type="checkbox" name="q9" value="E" class="mr-2">E 不影響儲蓄或必要支出</label>
+                                        </div>
+                                        <div class="space-y-2 bg-yellow-50 p-2 rounded">
+                                            <p class="font-bold text-gray-800">10. <span class="text-xs text-red-500 font-bold">(可複選)</span> 若朋友過度沉迷彩券，哪種建議最不理性？</p>
+                                            <label class="block"><input type="checkbox" name="q10" value="A" class="mr-2">A 鼓勵繼續買，大獎在下一期</label>
+                                            <label class="block"><input type="checkbox" name="q10" value="B" class="mr-2">B 建議尋求財務或心理輔導</label>
+                                            <label class="block"><input type="checkbox" name="q10" value="C" class="mr-2">C 借錢給他買，期待他中獎還錢</label>
+                                            <label class="block"><input type="checkbox" name="q10" value="D" class="mr-2">D 告訴他彩券是唯一翻身機會</label>
+                                        </div>
+                                        <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg shadow-md hover:bg-indigo-700 active:scale-95 transition">送出領取獎勵💰</button>
+                                    </form>
+                                `}
                             </div>
                         </div>
                     </div>
@@ -720,6 +805,38 @@
         function resetGame() {
             state.wallet = 1000;
             state.currentScreen = 'MAIN_MENU';
+            render();
+        }
+
+        function submitQuiz(e) {
+            e.preventDefault();
+            const form = e.target;
+            // 答案清單
+            const answers = {
+                q1: ['B'], q2: ['B'], q3: ['C'], q4: ['A', 'C', 'D'], q5: ['A'], 
+                q6: ['A'], q7: ['B'], q8: ['B'], q9: ['A', 'B', 'C', 'E'], q10: ['A', 'C', 'D']
+            };
+            
+            let correctCount = 0;
+            for (let i = 1; i <= 10; i++) {
+                const qName = `q${i}`;
+                const inputs = form.querySelectorAll(`input[name="${qName}"]:checked`);
+                const userAns = Array.from(inputs).map(inp => inp.value).sort();
+                const correctAns = answers[qName].sort();
+                
+                // 比對是否完全正確
+                if (userAns.length === correctAns.length && userAns.every((v, idx) => v === correctAns[idx])) {
+                    correctCount++;
+                }
+            }
+            
+            const bonus = correctCount * 50;
+            state.wallet += bonus;
+            state.highScore = Math.max(state.highScore, state.wallet);
+            state.quizCompleted = true;
+            localStorage.setItem('lottery_quiz_completed', 'true');
+            
+            showToast(`結算：答對了 ${correctCount} 題，獲得 $${bonus} 元！`);
             render();
         }
 
