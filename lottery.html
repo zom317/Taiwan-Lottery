@@ -220,24 +220,35 @@
         bgm.volume = 0.3;
         
         function toggleMusic() {
-            if (isMusicPlaying) {
-                bgm.pause();
-                musicIcon.innerText = '🔇';
-                isMusicPlaying = false;
-            } else {
-                // 使用 Promise 處理播放請求，避免瀏覽器報錯
-                const playPromise = bgm.play();
+// --- 超級程式王：音樂控制優化版 ---
+const bgm = document.getElementById('bgm');
+const musicIcon = document.getElementById('music-icon');
+let isMusicPlaying = false;
+
+// 設置初始音量，避免使用者被嚇到
+bgm.volume = 0.3; [cite: 67]
+
+function toggleMusic() {
+    if (isMusicPlaying) {
+        bgm.pause(); [cite: 68]
+        musicIcon.innerText = '🔇'; [cite: 68]
+        isMusicPlaying = false; [cite: 68]
+    } else {
+        // 使用 Promise 處理播放請求，這是現代瀏覽器的標準做法
+        const playPromise = bgm.play(); [cite: 69]
         
-                if (playPromise !== undefined) {
-                    playPromise.then(() => {
-                        musicIcon.innerText = '🎵';
-                        isMusicPlaying = true;
-                    }).catch(error => {
-                        console.error("音樂播放失敗，原因：", error);
-                        showToast("請先點擊頁面以啟用音樂");
-                    });
-                }
-            }
+        if (playPromise !== undefined) {
+            playPromise.then(() => {
+                musicIcon.innerText = '🎵'; [cite: 70]
+                isMusicPlaying = true; [cite: 70]
+            }).catch(error => {
+                // 捕獲因自動播放政策被封鎖的錯誤
+                console.error("音樂播放失敗：", error); [cite: 70]
+                showToast("請點擊頁面任何地方以啟用音樂"); [cite: 70]
+            });
+        }
+    }
+}
         }
 
         // 核心修正：處理瀏覽器 Autoplay 政策
