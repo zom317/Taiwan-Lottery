@@ -239,8 +239,8 @@
                         isMusicPlaying = true;
                     }).catch(error => {
                         // 捕獲因自動播放政策被封鎖的錯誤
-                        console.error("音樂播放失敗：", error);
-                        showToast("請點擊頁面任何地方以啟用音樂");
+                        console.error("music playing unsuccessful：", error);
+                        showToast("touch the screen to try again");
                     });
                 }
             }
@@ -314,24 +314,24 @@
                                     </div>
                                     <form id="quiz-form" onsubmit="submitQuiz(event)" class="space-y-6">
                                         <div class="space-y-2">
-                                            <p class="font-bold text-gray-800">1. 購買彩券除了娛樂之外，其中一個重要的社會意義是什麼？</p>
-                                            <label class="block"><input type="radio" name="q1" value="A" class="mr-2">A 中獎致富的唯一途徑</label>
-                                            <label class="block"><input type="radio" name="q1" value="B" class="mr-2" required>B 支持社會公益事業</label>
-                                            <label class="block"><input type="radio" name="q1" value="C" class="mr-2">C 證明個人運氣比別人好</label>
-                                            <label class="block"><input type="radio" name="q1" value="D" class="mr-2">D 快速解決財務問題</label>
+                                            <p class="font-bold text-gray-800">1. Besides entertainment, what is one of the important social significances of buying lottery tickets?</p>
+                                            <label class="block"><input type="radio" name="q1" value="A" class="mr-2">A The only way to win millions and get rich</label>
+                                            <label class="block"><input type="radio" name="q1" value="B" class="mr-2" required>B To support social welfare and public charity</label>
+                                            <label class="block"><input type="radio" name="q1" value="C" class="mr-2">C To prove that one's luck is better than others</label>
+                                            <label class="block"><input type="radio" name="q1" value="D" class="mr-2">D To quickly solve financial problems</label>
                                         </div>
                                         <div class="space-y-2">
-                                            <p class="font-bold text-gray-800">2. 從數學機率的角度來看，購買一張彩券中頭獎的機率通常是：</p>
-                                            <label class="block"><input type="radio" name="q2" value="A" class="mr-2">A 非常高，只要多買幾張</label>
-                                            <label class="block"><input type="radio" name="q2" value="B" class="mr-2" required>B 極低，接近於零</label>
-                                            <label class="block"><input type="radio" name="q2" value="C" class="mr-2">C 和擲硬幣一樣，有50%的機率</label>
+                                            <p class="font-bold text-gray-800">2. From the perspective of mathematical probability, the chance of winning the jackpot by buying a single lottery ticket is usually:</p>
+                                            <label class="block"><input type="radio" name="q2" value="A" class="mr-2">A Extremely high, as long as you buy a few more tickets</label>
+                                            <label class="block"><input type="radio" name="q2" value="B" class="mr-2" required>B Extremely low, approaching zero</label>
+                                            <label class="block"><input type="radio" name="q2" value="C" class="mr-2">C The same as tossing a coin, with a 50% chance</label>
                                         </div>
                                         <div class="space-y-2">
-                                            <p class="font-bold text-gray-800">3. 將多少比例的預算用於購買彩券，才是比較理性的行為？</p>
-                                            <label class="block"><input type="radio" name="q3" value="A" class="mr-2">A 超過收入的50%</label>
-                                            <label class="block"><input type="radio" name="q3" value="B" class="mr-2" required>B 40%~50%之間</label>
-                                            <label class="block"><input type="radio" name="q3" value="C" class="mr-2">C 僅拿閒置娛樂預算且不影響生活</label>
-                                            <label class="block"><input type="radio" name="q3" value="D" class="mr-2">D 越多越好</label>
+                                            <p class="font-bold text-gray-800">3. What proportion of one's budget is considered rational to spend on lottery tickets?</p>
+                                            <label class="block"><input type="radio" name="q3" value="A" class="mr-2">A More than 50% of one's income</label>
+                                            <label class="block"><input type="radio" name="q3" value="B" class="mr-2" required>B Between 40% and 50%</label>
+                                            <label class="block"><input type="radio" name="q3" value="C" class="mr-2">C Only using spare entertainment budget without affecting daily life</label>
+                                            <label class="block"><input type="radio" name="q3" value="D" class="mr-2">D The more, the better</label>
                                         </div>
                                         <div class="space-y-2 bg-yellow-50 p-2 rounded">
                                             <p class="font-bold text-gray-800">4. <span class="text-xs text-red-500 font-bold">(可複選)</span> 購買彩券動機若是改善生活，更穩健長期的財務規劃方式應包含？</p>
