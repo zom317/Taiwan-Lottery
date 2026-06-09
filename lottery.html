@@ -222,7 +222,7 @@
         let isMusicPlaying = false;
 
         // 設置初始音量 (0.0 到 1.0)
-        bgm.volume = 0.3;
+        bgm.volume = 1.0;
 
        function toggleMusic() {
             if (isMusicPlaying) {
@@ -334,7 +334,7 @@
                                             <label class="block"><input type="radio" name="q3" value="D" class="mr-2">D The more, the better</label>
                                         </div>
                                         <div class="space-y-2 bg-yellow-50 p-2 rounded">
-                                            <p class="font-bold text-gray-800">4. <span class="text-xs text-red-500 font-bold">(可複選)</span> 購買彩券動機若是改善生活，更穩健長期的財務規劃方式應包含？</p>
+                                            <p class="font-bold text-gray-800">4. <span class="text-xs text-red-500 font-bold">(Multiple-selection)</span> 購買彩券動機若是改善生活，更穩健長期的財務規劃方式應包含？</p>
                                             <label class="block"><input type="checkbox" name="q4" value="A" class="mr-2">A 定期儲蓄與投資</label>
                                             <label class="block"><input type="checkbox" name="q4" value="B" class="mr-2">B 依賴購買大量彩券</label>
                                             <label class="block"><input type="checkbox" name="q4" value="C" class="mr-2">C 制定詳細預算和支出計畫</label>
@@ -368,7 +368,7 @@
                                             <label class="block"><input type="radio" name="q8" value="D" class="mr-2">D 控制在娛樂預算內</label>
                                         </div>
                                         <div class="space-y-2 bg-yellow-50 p-2 rounded">
-                                            <p class="font-bold text-gray-800">9. <span class="text-xs text-red-500 font-bold">(可複選)</span> 哪些因素可確保您以健康心態參與？</p>
+                                            <p class="font-bold text-gray-800">9. <span class="text-xs text-red-500 font-bold">(Multiple-selection)</span> 哪些因素可確保您以健康心態參與？</p>
                                             <label class="block"><input type="checkbox" name="q9" value="A" class="mr-2">A 只買負擔得起的金額</label>
                                             <label class="block"><input type="checkbox" name="q9" value="B" class="mr-2">B 視為休閒而非投資</label>
                                             <label class="block"><input type="checkbox" name="q9" value="C" class="mr-2">C 事先規劃中獎後的用途</label>
@@ -376,13 +376,13 @@
                                             <label class="block"><input type="checkbox" name="q9" value="E" class="mr-2">E 不影響儲蓄或必要支出</label>
                                         </div>
                                         <div class="space-y-2 bg-yellow-50 p-2 rounded">
-                                            <p class="font-bold text-gray-800">10. <span class="text-xs text-red-500 font-bold">(可複選)</span> 若朋友過度沉迷彩券，哪種建議最不理性？</p>
+                                            <p class="font-bold text-gray-800">10. <span class="text-xs text-red-500 font-bold">(Multiple-selection)</span> 若朋友過度沉迷彩券，哪種建議最不理性？</p>
                                             <label class="block"><input type="checkbox" name="q10" value="A" class="mr-2">A 鼓勵繼續買，大獎在下一期</label>
                                             <label class="block"><input type="checkbox" name="q10" value="B" class="mr-2">B 建議尋求財務或心理輔導</label>
                                             <label class="block"><input type="checkbox" name="q10" value="C" class="mr-2">C 借錢給他買，期待他中獎還錢</label>
                                             <label class="block"><input type="checkbox" name="q10" value="D" class="mr-2">D 告訴他彩券是唯一翻身機會</label>
                                         </div>
-                                        <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg shadow-md hover:bg-indigo-700 active:scale-95 transition">送出領取獎勵💰</button>
+                                        <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg shadow-md hover:bg-indigo-700 active:scale-95 transition">Done and get award.💰</button>
                                     </form>
                                 `}
                             </div>
@@ -392,7 +392,7 @@
             } else if (state.currentScreen === 'RULES') {
                 container.innerHTML = `
                         <div class="max-w-2xl mx-auto pb-10">
-                                <h2 class="text-3xl font-bold text-center mb-6 text-green-600">📜 遊戲玩法說明</h2>
+                                <h2 class="text-3xl font-bold text-center mb-6 text-green-600">📜 How to play</h2>
                                 
                                 <div class="space-y-6 text-gray-700">
                                         <section class="bg-white p-5 rounded-xl border shadow-sm">
@@ -406,7 +406,7 @@
         
                                         <section class="bg-white p-5 rounded-xl border shadow-sm">
                                                 <h3 class="font-bold text-lg text-indigo-600 mb-4">🏆 查詢獎金規則</h3>
-                                                <p class="text-sm text-gray-500 mb-4">點擊下方按鈕查看各遊戲中獎條件：</p>
+                                                <p class="text-sm text-gray-500 mb-4"> Take the button to check 查看各遊戲中獎條件：</p>
                                                 <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
                                                         ${GAMES.map(g => `
                                                                 <button onclick="state.selectedPrizeGame='${g}'; render()" 
@@ -423,14 +423,14 @@
         
                                         <section class="bg-amber-50 p-5 rounded-xl border border-amber-200">
                                                 <p class="text-sm text-amber-800">
-                                                        <strong>⚠️ 注意事項：</strong> 本網頁僅供模擬娛樂使用，不具備真實博弈功能，請支持公益彩券，量力而為。
+                                                        <strong>⚠️ Notice：</strong> 本網頁僅供模擬娛樂使用，不具備真實博弈功能，請支持公益彩券，量力而為。
                                                 </p>
                                         </section>
                                 </div>
         
                                 <div class="text-center mt-8">
                                         <button onclick="state.selectedPrizeGame=null; changeScreen('MAIN_MENU')" class="bg-gray-800 text-white px-10 py-3 rounded-full font-bold shadow-lg hover:bg-black transition-all">
-                                                返回主選單
+                                                Back to the menu
                                         </button>
                                 </div>
                         </div>
@@ -443,9 +443,9 @@
                 container.innerHTML = `
                     <div class="text-center mt-16 animate-bounce">
                         <h1 class="text-8xl mb-6">💸</h1>
-                        <h2 class="text-4xl font-bold text-red-600 mb-2">您已破產！</h2>
-                        <p class="text-gray-500 mb-8">雖然沒錢了，但你曾經的最高紀錄為: <span class="font-bold text-indigo-600">$${state.highScore.toLocaleString()}</span></p>
-                        <button onclick="resetGame()" class="bg-yellow-500 text-white text-xl px-12 py-4 rounded-full font-bold shadow-xl hover:scale-105 transition-transform">重新領取 $1000</button>
+                        <h2 class="text-4xl font-bold text-red-600 mb-2">You Are Bankrupt！</h2>
+                        <p class="text-gray-500 mb-8">Your highest score: <span class="font-bold text-indigo-600">$${state.highScore.toLocaleString()}</span></p>
+                        <button onclick="resetGame()" class="bg-yellow-500 text-white text-xl px-12 py-4 rounded-full font-bold shadow-xl hover:scale-105 transition-transform">Get $1000 and start again</button>
                     </div>
                 `;
             }
@@ -453,21 +453,21 @@
 
         function renderGamePlay(container) {
             let maxBalls = 49;
-            if (state.selectedGame === "威力彩") maxBalls = 38;
-            if (state.selectedGame === "今彩539") maxBalls = 39;
+            if (state.selectedGame === "Power Lottery") maxBalls = 38;
+            if (state.selectedGame === "Daily Cash 39") maxBalls = 39;
             if (state.selectedGame === "BINGO") maxBalls = 80;
 
             let ballHtml = "";
-            if (["3星彩", "4星彩"].includes(state.selectedGame)) {
+            if (["3-Digit", "4-Digit"].includes(state.selectedGame)) {
                 ballHtml = `
                     <div class="text-center p-6 bg-white rounded-xl border">
                         <div class="text-3xl font-mono tracking-widest bg-indigo-50 text-indigo-600 p-4 rounded-lg mb-6 border-2 border-indigo-100">
-                            ${state.playerSelection.length > 0 ? state.playerSelection.join(' ') : '請依序輸入數字'}
+                            ${state.playerSelection.length > 0 ? state.playerSelection.join(' ') : 'Please input the number in order'}
                         </div>
                         <div class="grid grid-cols-5 gap-2 max-w-xs mx-auto">
                             ${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<button onclick="pickStarNum(${n})" class="bg-gray-100 p-3 rounded-lg hover:bg-indigo-500 hover:text-white font-bold text-xl">${n}</button>`).join('')}
                         </div>
-                        <button onclick="state.playerSelection=[] ; render()" class="mt-6 text-red-500 underline text-sm">清除重選</button>
+                        <button onclick="state.playerSelection=[] ; render()" class="mt-6 text-red-500 underline text-sm">Clean and choose again</button>
                     </div>
                 `;
             } else {
@@ -479,18 +479,18 @@
                     <div class="flex-grow md:overflow-y-auto w-full">
                         <h2 class="text-2xl font-bold mb-4">投注遊戲: <span class="text-indigo-600">${state.selectedGame}</span></h2>
                         ${ballHtml}
-                        ${state.selectedGame === "威力彩" ? `
+                        ${state.selectedGame === "Power Lottery" ? `
                             <div class="mt-6 p-4 bg-red-50 border border-red-100 rounded-xl mb-4">
-                                <h3 class="font-bold mb-2 text-red-700">第二區 (1-8):</h3>
+                                <h3 class="font-bold mb-2 text-red-700">Second Sector (1-8):</h3>
                                 <div class="flex flex-wrap justify-center sm:justify-start gap-2">${[1, 2, 3, 4, 5, 6, 7, 8].map(n => `<div onclick="state.playerSpecial = ${n}; render()" class="ball w-10 h-10 flex items-center justify-center border-2 rounded-full font-bold ${state.playerSpecial === n ? 'bg-red-500 text-white border-red-700' : 'bg-white'}">${n}</div>`).join('')}</div>
                             </div>
                         ` : ''}
                     </div>
                     <div class="w-full md:w-72 md:flex-shrink-0 bg-gray-50 p-5 md:border-l border-t md:border-t-0 flex flex-col gap-5 rounded-b-xl md:rounded-r-xl">
-                        <button onclick="changeScreen('MAIN_MENU')" class="w-full py-2 bg-white border rounded-lg font-bold hover:bg-gray-100 transition-colors">← 返回首頁</button>
+                        <button onclick="changeScreen('MAIN_MENU')" class="w-full py-2 bg-white border rounded-lg font-bold hover:bg-gray-100 transition-colors">← Back to the menu</button>
                     
                         <div class="bg-white p-4 rounded-xl border shadow-sm">
-                            <label class="text-xs font-black text-gray-400 block mb-2 uppercase tracking-wider">Quick Pick / 機選</label>
+                            <label class="text-xs font-black text-gray-400 block mb-2 uppercase tracking-wider">Quick Pick (Pick by computer)</label>
                             
                             <div class="flex items-center gap-2 mb-4">
                                 <button onclick="adjust('ticketCount', -1)" class="bg-gray-100 w-10 h-10 rounded-lg hover:bg-gray-200 font-bold">-</button>
@@ -499,7 +499,7 @@
                             </div>
 
                             <button onclick="addAutoToCart()" class="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 active:scale-95 transition-all shadow-md text-sm">
-                                <i class="fas fa-magic mr-1"></i> 機選加入購物車
+                                <i class="fas fa-magic mr-1"></i> Join quick pick into the shopping list
                             </button>
                             </div>
                                 <div class="bg-white p-4 rounded-xl border">
@@ -515,7 +515,7 @@
                         <div class="mt-auto">
                             <div class="mb-2 flex justify-between items-center px-1">
                                 <span class="text-xs font-bold text-gray-500">購物車張數：</span>
-                                <span class="text-sm font-black text-indigo-600">${state.cart.length} 張</span>
+                                <span class="text-sm font-black text-indigo-600">${state.cart.length} </span>
                             </div>
                         </div>
                     </div>
@@ -526,16 +526,16 @@
             if (!game) return `<div class="text-center py-10 text-gray-400 bg-gray-50 rounded-xl">請選擇遊戲查看獎金</div>`;
 
             const tables = {
-                "大樂透": [["01~49選六個號碼 + 系統自動分配一個隱藏號碼「特別號」", ""], ["6個號碼", "頭獎 1億"], ["5個+特別號", "200萬"], ["5個號碼", "5萬"], ["4個+特別號", "1.5萬"], ["3個+特別號", "1,000"], ["3個號碼", "400"]],
-                "威力彩": [["01~38選六個號碼 + 01~08選一個號碼", ""], ["第一區6個+第二區", "頭獎 2億"], ["第一區6個", "2,000萬"], ["第一區3個+第二區", "400"], ["普獎", "100"]],
-                "今彩539": [["01~39選五個號碼", ""], ["5個號碼", "800萬"], ["4個號碼", "2萬"], ["3個號碼", "300"], ["2個號碼", "50"]],
-                "3星彩": [
+                "Grand Lottery": [["Choose 6 number in range 01~49", ""], ["6 numbers", "頭獎 100 million"], ["5 numbers + special number", "2 million"], ["5 numbers", "50 thousand"], ["4 numbers + special number", "15 thousand"], ["3 numbers + special number", "1 thousand"], ["3 numbers", "400"]],
+                "Power Lottery": [["First sector:Choose 6 number in range 01~49    Second sector:Choose 1 number in range 1~8", ""], ["First sector get 6 numbers & First sector get the number", "頭獎 2億"], ["第一區6個", "2,000萬"], ["第一區3個+第二區", "400"], ["普獎", "100"]],
+                "Daily Cash 39": [["01~39選五個號碼", ""], ["5個號碼", "800萬"], ["4個號碼", "2萬"], ["3個號碼", "300"], ["2個號碼", "50"]],
+                "3-Digit": [
                     ["選一個三位數", ""],
                     ["全中 (壹獎)", "5,000"],
                     ["末2碼對位 (貳獎)", "500"],
                     ["末1碼對位 (參獎)", "50"]
                 ],
-                "4星彩": [
+                "4-Digit": [
                     ["選一個四位數", ""],
                     ["全中 (壹獎)", "50,000"],
                     ["末3碼對位 (貳獎)", "5,000"],
