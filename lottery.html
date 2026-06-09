@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
@@ -65,7 +65,7 @@
                 <div class="text-xs opacity-70">Highest Record: <span id="high-score-display">$1000</span></div>
             </div>
             <div class="hidden sm:block text-right">
-                <div class="text-sm opacity-80 font-bold">Game by nhsh108 簡宥軒 王語馡</div>
+                <div class="text-sm opacity-80 font-bold">Game by nhsh108 簡宥軒(U hsuan) 王語馡(Flora)</div>
             </div>
             <button id="music-toggle" onclick="toggleMusic()"
                 class="bg-indigo-500 hover:bg-indigo-400 p-2 rounded-full transition-colors">
@@ -274,7 +274,7 @@
                                 </div>
                                 
                                 <div class="space-y-3 max-h-48 overflow-y-auto scroll-container pr-2">
-                                    ${state.cart.length === 0 ? `<p class="text-center text-gray-400 py-6 font-bold">The shopping list is claer now！</p>` : state.cart.map((t, idx) => `
+                                    ${state.cart.length === 0 ? `<p class="text-center text-gray-400 py-6 font-bold">The shopping list is clear now!</p>` : state.cart.map((t, idx) => `
                                         <div class="p-3 bg-gray-50 border rounded-xl flex justify-between items-center hover:bg-white transition-colors">
                                             <div class="flex flex-col">
                                                 <div class="flex items-center gap-2 mb-1">
@@ -310,7 +310,7 @@
                                     </div>
                                 ` : `
                                     <div class="mb-4 text-xs text-gray-700 bg-white p-3 rounded-lg border border-indigo-100 leading-relaxed shadow-sm">
-                                        <strong class="text-indigo-700">💡What is the gambler's fallacy?</strong><br>主張由於某事發生了很多次，因此接下來不太可能發生（或很久沒發生，就很可能會發生）。<br>這就如同拋一枚公平的硬幣，連續多次正面，並不影響下次拋出正反面的機率。
+                                        <strong class="text-indigo-700">💡What is the gambler's fallacy?</strong><br>The fallacy claims that because something has happened many times, it is less likely to happen next (or if it has not happened for a long time, it is more likely to happen).<br>It is like tossing a fair coin: several heads in a row does not affect the probability of heads or tails on the next toss.
                                     </div>
                                     <form id="quiz-form" onsubmit="submitQuiz(event)" class="space-y-6">
                                         <div class="space-y-2">
@@ -334,53 +334,53 @@
                                             <label class="block"><input type="radio" name="q3" value="D" class="mr-2">D The more, the better</label>
                                         </div>
                                         <div class="space-y-2 bg-yellow-50 p-2 rounded">
-                                            <p class="font-bold text-gray-800">4. <span class="text-xs text-red-500 font-bold">(Multiple-selection)</span> 購買彩券動機若是改善生活，更穩健長期的財務規劃方式應包含？</p>
-                                            <label class="block"><input type="checkbox" name="q4" value="A" class="mr-2">A 定期儲蓄與投資</label>
-                                            <label class="block"><input type="checkbox" name="q4" value="B" class="mr-2">B 依賴購買大量彩券</label>
-                                            <label class="block"><input type="checkbox" name="q4" value="C" class="mr-2">C 制定詳細預算和支出計畫</label>
-                                            <label class="block"><input type="checkbox" name="q4" value="D" class="mr-2">D 尋求專業理財建議</label>
+                                            <p class="font-bold text-gray-800">4. <span class="text-xs text-red-500 font-bold">(Multiple-selection)</span> If the motivation for buying lottery tickets is to improve life, which of the following is part of a more stable long-term financial plan?</p>
+                                            <label class="block"><input type="checkbox" name="q4" value="A" class="mr-2">A Regular saving and investing</label>
+                                            <label class="block"><input type="checkbox" name="q4" value="B" class="mr-2">B Relying on buying many tickets</label>
+                                            <label class="block"><input type="checkbox" name="q4" value="C" class="mr-2">C Making a detailed budget and spending plan</label>
+                                            <label class="block"><input type="checkbox" name="q4" value="D" class="mr-2">D Seeking professional financial advice</label>
                                         </div>
                                         <div class="space-y-2">
-                                            <p class="font-bold text-gray-800">5. 關於下列敘述，哪項最可能有「賭徒謬誤」？</p>
-                                            <label class="block"><input type="radio" name="q5" value="A" class="mr-2" required>A 相信連輸越多下次中獎機率越高</label>
-                                            <label class="block"><input type="radio" name="q5" value="B" class="mr-2">B 認為中獎號碼是可預測的</label>
-                                            <label class="block"><input type="radio" name="q5" value="C" class="mr-2">C 理解每次開獎為獨立事件</label>
-                                            <label class="block"><input type="radio" name="q5" value="D" class="mr-2">D 中獎者一定有特別秘訣</label>
+                                            <p class="font-bold text-gray-800">5. Which of the following statements is most likely an example of the gambler's fallacy?</p>
+                                            <label class="block"><input type="radio" name="q5" value="A" class="mr-2" required>A Believing the more losses in a row, the higher the next win chance</label>
+                                            <label class="block"><input type="radio" name="q5" value="B" class="mr-2">B Thinking winning numbers are predictable</label>
+                                            <label class="block"><input type="radio" name="q5" value="C" class="mr-2">C Understanding each draw is an independent event</label>
+                                            <label class="block"><input type="radio" name="q5" value="D" class="mr-2">D Believing winners always have a special secret</label>
                                         </div>
                                         <div class="space-y-2">
-                                            <p class="font-bold text-gray-800">6. 下列哪一種行為最符合購買彩券的「理性態度」？</p>
-                                            <label class="block"><input type="radio" name="q6" value="A" class="mr-2" required>A 視為低機率樂透遊戲，僅用閒錢參與</label>
-                                            <label class="block"><input type="radio" name="q6" value="B" class="mr-2">B 為追回輸掉的錢不斷增加投入</label>
-                                            <label class="block"><input type="radio" name="q6" value="C" class="mr-2">C 深信研究歷史數據可預測下期號碼</label>
-                                            <label class="block"><input type="radio" name="q6" value="D" class="mr-2">D 為致富犧牲日常必需品</label>
+                                            <p class="font-bold text-gray-800">6. Which of the following behaviors best matches a rational attitude toward buying lottery tickets?</p>
+                                            <label class="block"><input type="radio" name="q6" value="A" class="mr-2" required>A Treat it as a low-probability lottery game and only use spare money</label>
+                                            <label class="block"><input type="radio" name="q6" value="B" class="mr-2">B Increasing spending to recover lost money</label>
+                                            <label class="block"><input type="radio" name="q6" value="C" class="mr-2">C Strongly believing historical data can predict the next numbers</label>
+                                            <label class="block"><input type="radio" name="q6" value="D" class="mr-2">D Sacrificing daily necessities to get rich</label>
                                         </div>
                                         <div class="space-y-2">
-                                            <p class="font-bold text-gray-800">7. 如果連續多期未中獎，理性的態度應該是：</p>
-                                            <label class="block"><input type="radio" name="q7" value="A" class="mr-2">A 根據賭徒謬誤，下期機率將提高</label>
-                                            <label class="block"><input type="radio" name="q7" value="B" class="mr-2" required>B 接受開獎為獨立事件，維持既定預算</label>
-                                            <label class="block"><input type="radio" name="q7" value="C" class="mr-2">C 立即投入更多資金</label>
+                                            <p class="font-bold text-gray-800">7. If you have missed multiple draws in a row, the rational response should be:</p>
+                                            <label class="block"><input type="radio" name="q7" value="A" class="mr-2">A Rely on the gambler's fallacy and expect a higher chance next time</label>
+                                            <label class="block"><input type="radio" name="q7" value="B" class="mr-2" required>B Accept the draw is independent and keep your budget</label>
+                                            <label class="block"><input type="radio" name="q7" value="C" class="mr-2">C Invest more money immediately</label>
                                         </div>
                                         <div class="space-y-2">
-                                            <p class="font-bold text-gray-800">8. 購買彩券時哪種行為屬於高風險？</p>
-                                            <label class="block"><input type="radio" name="q8" value="A" class="mr-2">A 買小額彩券作為休閒</label>
-                                            <label class="block"><input type="radio" name="q8" value="B" class="mr-2" required>B 使用信用卡或借貸買大量彩券</label>
-                                            <label class="block"><input type="radio" name="q8" value="C" class="mr-2">C 設好購買上限金額</label>
-                                            <label class="block"><input type="radio" name="q8" value="D" class="mr-2">D 控制在娛樂預算內</label>
+                                            <p class="font-bold text-gray-800">8. Which of the following behaviors is high-risk when buying lottery tickets?</p>
+                                            <label class="block"><input type="radio" name="q8" value="A" class="mr-2">A Buying small tickets as entertainment</label>
+                                            <label class="block"><input type="radio" name="q8" value="B" class="mr-2" required>B Using credit cards or loans to buy many tickets</label>
+                                            <label class="block"><input type="radio" name="q8" value="C" class="mr-2">C Setting a purchase limit</label>
+                                            <label class="block"><input type="radio" name="q8" value="D" class="mr-2">D Staying within the entertainment budget</label>
                                         </div>
                                         <div class="space-y-2 bg-yellow-50 p-2 rounded">
-                                            <p class="font-bold text-gray-800">9. <span class="text-xs text-red-500 font-bold">(Multiple-selection)</span> 哪些因素可確保您以健康心態參與？</p>
-                                            <label class="block"><input type="checkbox" name="q9" value="A" class="mr-2">A 只買負擔得起的金額</label>
-                                            <label class="block"><input type="checkbox" name="q9" value="B" class="mr-2">B 視為休閒而非投資</label>
-                                            <label class="block"><input type="checkbox" name="q9" value="C" class="mr-2">C 事先規劃中獎後的用途</label>
-                                            <label class="block"><input type="checkbox" name="q9" value="D" class="mr-2">D 當期未中會馬上加倍投入</label>
-                                            <label class="block"><input type="checkbox" name="q9" value="E" class="mr-2">E 不影響儲蓄或必要支出</label>
+                                            <p class="font-bold text-gray-800">9. <span class="text-xs text-red-500 font-bold">(Multiple-selection)</span> Which factors help ensure you participate with a healthy mindset?</p>
+                                            <label class="block"><input type="checkbox" name="q9" value="A" class="mr-2">A Only buy what you can afford</label>
+                                            <label class="block"><input type="checkbox" name="q9" value="B" class="mr-2">B Treat it as leisure, not investment</label>
+                                            <label class="block"><input type="checkbox" name="q9" value="C" class="mr-2">C Plan how to use winnings in advance</label>
+                                            <label class="block"><input type="checkbox" name="q9" value="D" class="mr-2">D Increase stakes immediately after losing</label>
+                                            <label class="block"><input type="checkbox" name="q9" value="E" class="mr-2">E Do not affect savings or necessary expenses</label>
                                         </div>
                                         <div class="space-y-2 bg-yellow-50 p-2 rounded">
-                                            <p class="font-bold text-gray-800">10. <span class="text-xs text-red-500 font-bold">(Multiple-selection)</span> 若朋友過度沉迷彩券，哪種建議最不理性？</p>
-                                            <label class="block"><input type="checkbox" name="q10" value="A" class="mr-2">A 鼓勵繼續買，大獎在下一期</label>
-                                            <label class="block"><input type="checkbox" name="q10" value="B" class="mr-2">B 建議尋求財務或心理輔導</label>
-                                            <label class="block"><input type="checkbox" name="q10" value="C" class="mr-2">C 借錢給他買，期待他中獎還錢</label>
-                                            <label class="block"><input type="checkbox" name="q10" value="D" class="mr-2">D 告訴他彩券是唯一翻身機會</label>
+                                            <p class="font-bold text-gray-800">10. <span class="text-xs text-red-500 font-bold">(Multiple-selection)</span> If a friend is overly addicted to lottery tickets, which suggestion is least rational?</p>
+                                            <label class="block"><input type="checkbox" name="q10" value="A" class="mr-2">A Encourage them to keep buying, the jackpot is next time</label>
+                                            <label class="block"><input type="checkbox" name="q10" value="B" class="mr-2">B Suggest seeking financial or psychological counseling</label>
+                                            <label class="block"><input type="checkbox" name="q10" value="C" class="mr-2">C Lend them money to buy tickets, hoping they win and repay</label>
+                                            <label class="block"><input type="checkbox" name="q10" value="D" class="mr-2">D Tell them the lottery is the only chance to turn their life around</label>
                                         </div>
                                         <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg shadow-md hover:bg-indigo-700 active:scale-95 transition">Done and get award.💰</button>
                                     </form>
@@ -396,17 +396,17 @@
                                 
                                 <div class="space-y-6 text-gray-700">
                                         <section class="bg-white p-5 rounded-xl border shadow-sm">
-                                                <h3 class="font-bold text-lg text-indigo-600 mb-2">💰 基礎規則</h3>
+                                                <h3 class="font-bold text-lg text-indigo-600 mb-2">💰 Basic rules</h3>
                                                 <ul class="list-disc ml-5 space-y-1">
-                                                        <li>初始金額為 <strong>$1,000</strong>，大樂透、威力彩等每注 <strong>$50</strong>；3星/4星彩每注 <strong>$25</strong>。</li>
-                                                        <li>您可以選擇「自選號碼」或直接設定「機選張數」。</li>
-                                                        <li>點擊「立即結算」後，系統會自動幫您對獎並更新餘額。</li>
+                                                        <li>Starting balance is <strong>$1,000</strong>. Grand Lottery, Power Lottery, and similar tickets cost <strong>$50</strong> each; 3-Digit and 4-Digit tickets cost <strong>$25</strong> each.</li>
+                                                        <li>You can choose your own numbers or set the number of quick-pick tickets.</li>
+                                                        <li>After clicking "Confirm Purchase", the system will automatically check results and update your balance.</li>
                                                 </ul>
                                         </section>
         
                                         <section class="bg-white p-5 rounded-xl border shadow-sm">
-                                                <h3 class="font-bold text-lg text-indigo-600 mb-4">🏆 查詢獎金規則</h3>
-                                                <p class="text-sm text-gray-500 mb-4"> Take the button to check 查看各遊戲中獎條件：</p>
+                                                <h3 class="font-bold text-lg text-indigo-600 mb-4">🏆 Prize rule lookup</h3>
+                                                <p class="text-sm text-gray-500 mb-4">Use the buttons below to view each game's prize conditions:</p>
                                                 <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
                                                         ${GAMES.map(g => `
                                                                 <button onclick="state.selectedPrizeGame='${g}'; render()" 
@@ -423,7 +423,7 @@
         
                                         <section class="bg-amber-50 p-5 rounded-xl border border-amber-200">
                                                 <p class="text-sm text-amber-800">
-                                                        <strong>⚠️ Notice：</strong> 本網頁僅供模擬娛樂使用，不具備真實博弈功能，請支持公益彩券，量力而為。
+                                                        <strong>⚠️ Notice:</strong> This page is for simulated entertainment only and does not offer real gambling. Please support public welfare lottery responsibly and within your means.
                                                 </p>
                                         </section>
                                 </div>
@@ -477,7 +477,7 @@
             container.innerHTML = `
                 <div class="flex flex-col md:flex-row h-full gap-6 overflow-y-auto md:overflow-hidden pb-10 md:pb-0">
                     <div class="flex-grow md:overflow-y-auto w-full">
-                        <h2 class="text-2xl font-bold mb-4">投注遊戲: <span class="text-indigo-600">${state.selectedGame}</span></h2>
+                        <h2 class="text-2xl font-bold mb-4">Selected game: <span class="text-indigo-600">${state.selectedGame}</span></h2>
                         ${ballHtml}
                         ${state.selectedGame === "Power Lottery" ? `
                             <div class="mt-6 p-4 bg-red-50 border border-red-100 rounded-xl mb-4">
@@ -503,18 +503,18 @@
                             </button>
                             </div>
                                 <div class="bg-white p-4 rounded-xl border">
-                                <label class="text-xs font-black text-gray-400 block mb-2">自選張數</label>
+                                <label class="text-xs font-black text-gray-400 block mb-2">Manual ticket count</label>
                                 <div class="flex items-center gap-2">
                                     <button onclick="adjust('manualTicketCount', -1)" class="bg-gray-100 w-8 h-8 rounded">-</button>
                                     <span class="flex-grow text-center font-bold text-green-600">${state.manualTicketCount}</span>
                                     <button onclick="adjust('manualTicketCount', 1)" class="bg-gray-100 w-8 h-8 rounded">+</button>
                                     </div>
                             </div>
-                            <button onclick="addManualToCart()" class="w-full mt-3 py-2 bg-green-500 text-white rounded-lg text-sm font-bold hover:bg-green-600 transition-colors">加入購物車</button>
-                            <span class="text-xs font-bold text-gray-400">結帳請回首頁下方
+                            <button onclick="addManualToCart()" class="w-full mt-3 py-2 bg-green-500 text-white rounded-lg text-sm font-bold hover:bg-green-600 transition-colors">Add to cart</button>
+                            <span class="text-xs font-bold text-gray-400">Please checkout from the home screen below</span>
                         <div class="mt-auto">
                             <div class="mb-2 flex justify-between items-center px-1">
-                                <span class="text-xs font-bold text-gray-500">購物車張數：</span>
+                                <span class="text-xs font-bold text-gray-500">Cart ticket count:</span>
                                 <span class="text-sm font-black text-indigo-600">${state.cart.length} </span>
                             </div>
                         </div>
@@ -523,25 +523,25 @@
             `;
         }
         function renderPrizeTable(game) {
-            if (!game) return `<div class="text-center py-10 text-gray-400 bg-gray-50 rounded-xl">請選擇遊戲查看獎金</div>`;
+            if (!game) return `<div class="text-center py-10 text-gray-400 bg-gray-50 rounded-xl">Please select a game to view prize details</div>`;
 
             const tables = {
-                "Grand Lottery": [["Choose 6 number in range 01~49", ""], ["6 numbers", "頭獎 100 million"], ["5 numbers + special number", "2 million"], ["5 numbers", "50 thousand"], ["4 numbers + special number", "15 thousand"], ["3 numbers + special number", "1 thousand"], ["3 numbers", "400"]],
-                "Power Lottery": [["First sector:Choose 6 number in range 01~49    Second sector:Choose 1 number in range 1~8", ""], ["First sector get 6 numbers & First sector get the number", "頭獎 2億"], ["第一區6個", "2,000萬"], ["第一區3個+第二區", "400"], ["普獎", "100"]],
-                "Daily Cash 39": [["01~39選五個號碼", ""], ["5個號碼", "800萬"], ["4個號碼", "2萬"], ["3個號碼", "300"], ["2個號碼", "50"]],
+                "Grand Lottery": [["Choose 6 numbers from 01~49", ""], ["6 numbers", "Jackpot 100 million"], ["5 numbers + special number", "8 million"], ["5 numbers", "7 million"], ["4 numbers + special number", "5.5 million"], ["4 numbers", "2,000"], ["3 numbers + special number", "1,000"], ["3 numbers", "400"]],
+                "Power Lottery": [["First sector: Choose 6 numbers from 01~38; Second sector: Choose 1 number from 1~8", ""], ["6 numbers + matching second sector", "Jackpot 200 million"], ["6 numbers in first sector", "20 million"], ["3 numbers in first sector + second sector", "400"], ["General prize", "100"]],
+                "Daily Cash 39": [["Choose 5 numbers from 01~39", ""], ["5 numbers", "8 million"], ["4 numbers", "20,000"], ["3 numbers", "300"], ["2 numbers", "50"]],
                 "3-Digit": [
-                    ["選一個三位數", ""],
-                    ["全中 (壹獎)", "5,000"],
-                    ["末2碼對位 (貳獎)", "500"],
-                    ["末1碼對位 (參獎)", "50"]
+                    ["Choose a 3-digit number", ""],
+                    ["Match all digits (1st prize)", "5,000"],
+                    ["Last 2 digits match (2nd prize)", "500"],
+                    ["Last digit match (3rd prize)", "50"]
                 ],
                 "4-Digit": [
-                    ["選一個四位數", ""],
-                    ["全中 (壹獎)", "50,000"],
-                    ["末3碼對位 (貳獎)", "5,000"],
-                    ["末2碼對位 (參獎)", "500"]
+                    ["Choose a 4-digit number", ""],
+                    ["Match all digits (1st prize)", "50,000"],
+                    ["Last 3 digits match (2nd prize)", "5,000"],
+                    ["Last 2 digits match (3rd prize)", "500"]
                 ],
-                "BINGO": [["中 10 號", "5,000"], ["中 5-9 號", "每號 500"]]
+                "BINGO": [["Match 10 numbers", "5,000"], ["Match 5-9 numbers", "500 each"]]
             };
 
             const data = tables[game] || [];
@@ -549,7 +549,7 @@
                         <div class="mt-4 overflow-hidden border rounded-lg">
                                 <table class="w-full text-sm">
                                         <thead class="bg-indigo-50 text-indigo-800">
-                                                <tr><th class="p-2 text-left">中獎條件</th><th class="p-2 text-right">模擬獎金</th></tr>
+                                                <tr><th class="p-2 text-left">Winning condition</th><th class="p-2 text-right">Prize</th></tr>
                                         </thead>
                                         <tbody class="divide-y">
                                                 ${data.map(row => `<tr><td class="p-2 text-gray-600">${row[0]}</td><td class="p-2 text-right font-bold text-red-500">$${row[1]}</td></tr>`).join('')}
@@ -565,23 +565,23 @@
 
             container.innerHTML = `
                 <div class="mb-6">
-                    <h2 class="text-2xl font-bold mb-4">本期開獎結果</h2>
+                    <h2 class="text-2xl font-bold mb-4">This draw's results</h2>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                         <div class="bg-white p-4 rounded-xl border shadow-sm text-center">
-                            <p class="text-xs text-gray-400">總成本</p>
+                            <p class="text-xs text-gray-400">Total cost</p>
                             <p class="text-lg font-bold">$${totalCost.toLocaleString()}</p>
                         </div>
                         <div class="bg-white p-4 rounded-xl border shadow-sm text-center">
-                            <p class="text-xs text-gray-400">總獎金</p>
+                            <p class="text-xs text-gray-400">Total prize</p>
                             <p class="text-lg font-bold text-red-600">$${totalWon.toLocaleString()}</p>
                         </div>
                         <div class="bg-white p-4 rounded-xl border shadow-sm text-center">
-                            <p class="text-xs text-gray-400">淨損益</p>
+                            <p class="text-xs text-gray-400">Net gain/loss</p>
                             <p class="text-lg font-bold ${net >= 0 ? 'text-green-600' : 'text-gray-500'}">${net >= 0 ? '+' : ''}$${net.toLocaleString()}</p>
                         </div>
                     </div>
 
-                    <h3 class="font-bold text-gray-500 mb-2">官方開獎號碼</h3>
+                    <h3 class="font-bold text-gray-500 mb-2">Official draw numbers</h3>
                     <div class="space-y-2 mb-8">
                         ${Object.entries(drawnPool).map(([game, drawn]) => `
                             <div class="bg-indigo-50 p-3 rounded-xl flex justify-between items-center border border-indigo-100">
@@ -594,7 +594,7 @@
                         `).join('')}
                     </div>
 
-                    <h3 class="font-bold text-gray-500 mb-2">您的投注明細</h3>
+                    <h3 class="font-bold text-gray-500 mb-2">Your ticket details</h3>
                     <div class="space-y-2 max-h-64 overflow-y-auto scroll-container pr-2">
                         ${tickets.map((t, idx) => {
                 const isWin = t.prize > 0;
@@ -602,7 +602,7 @@
                                 <div class="p-3 bg-white border rounded-xl flex justify-between items-center transition-all ${isWin ? 'win-card shadow-md' : 'opacity-80'}">
                                     <div class="flex flex-col">
                                         <div class="flex items-center gap-2">
-                                            <span class="text-[10px] font-bold bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">第 ${idx + 1} 張</span>
+                                            <span class="text-[10px] font-bold bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">Ticket ${idx + 1}</span>
                                             <span class="font-bold text-sm text-gray-700">${t.type}</span>
                                         </div>
                                         <div class="flex gap-1 mt-1">
@@ -612,10 +612,10 @@
                                     </div>
                                     <div class="text-right">
                                         ${isWin ? `
-                                            <p class="text-xs font-bold text-amber-600">中獎！</p>
+                                            <p class="text-xs font-bold text-amber-600">Win!</p>
                                             <p class="text-sm font-black text-red-600">+$${t.prize.toLocaleString()}</p>
                                         ` : `
-                                            <p class="text-xs text-gray-400">未中獎</p>
+                                            <p class="text-xs text-gray-400">No win</p>
                                             <p class="text-sm font-bold text-gray-300">$0</p>
                                         `}
                                     </div>
@@ -626,8 +626,8 @@
                 </div>
 
                 <div class="flex justify-center gap-4 py-4 bg-white border-t sticky bottom-0">
-                    <button onclick="changeScreen('PLAYING')" class="bg-indigo-600 text-white px-10 py-3 rounded-full font-bold shadow-lg">繼續下注</button>
-                    <button onclick="changeScreen('MAIN_MENU')" class="bg-gray-100 px-10 py-3 rounded-full font-bold hover:bg-gray-200">返回首頁</button>
+                    <button onclick="changeScreen('PLAYING')" class="bg-indigo-600 text-white px-10 py-3 rounded-full font-bold shadow-lg">Continue betting</button>
+                    <button onclick="changeScreen('MAIN_MENU')" class="bg-gray-100 px-10 py-3 rounded-full font-bold hover:bg-gray-200">Return to home</button>
                 </div>
             `;
         }
@@ -660,7 +660,7 @@
                 });
             }
 
-            showToast(`已機選 ${state.ticketCount} 張號碼加入購物車`);
+            showToast(`Auto-picked ${state.ticketCount} tickets added to cart`);
 
             // 3. 重置狀態並更新畫面
             state.ticketCount = 1; // 回到 1 張
@@ -679,7 +679,7 @@
                 if (state.playerSelection.length < limit) {
                     state.playerSelection.push(n);
                 } else {
-                    showToast(`【Notice!】${state.selectedGame} can choose most ${limit} number(s)`);
+                    showToast(`【Notice!】${state.selectedGame} can choose at most ${limit} number(s)`);
                 }
             }
             render();
@@ -691,7 +691,7 @@
                 state.playerSelection.push(n);
                 render();
             } else {
-                showToast(`【Notice!】${state.selectedGame} number have been filled!`);
+                showToast(`【Notice!】${state.selectedGame} numbers have been filled!`);
             }
         }
 
@@ -736,7 +736,7 @@
 
         function deleteCartItem(idx) {
             state.cart.splice(idx, 1);
-            showToast('Have been remove from the shopping list！');
+            showToast('Removed from the shopping list!');
             render();
         }
 
@@ -748,7 +748,7 @@
 
             const totalCost = state.cart.reduce((s, t) => s + (["3-Digit", "4-Digit"].includes(t.type) ? 25 : 50), 0);
             if (state.wallet < totalCost) {
-                showToast("You have no enough money！");
+                showToast("You do not have enough money!");
                 return;
             }
 
