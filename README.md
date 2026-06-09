@@ -1,3 +1,3 @@
 # Taiwan-Lottery 
 open this:
-https://zom317.github.io/Taiwan-Lottery/lottery2
+https://zom317.github.io/Taiwan-Lottery/lottery
