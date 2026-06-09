@@ -635,7 +635,7 @@
             // 1. 決定要機選幾個號碼 (pickCount)
             let currentPickCount = state.playerSelection.length;
 
-            if (state.selectedGame === "今彩539") {
+            if (state.selectedGame === "Daily Cash 39") {
                 currentPickCount = 5;
             } else if (state.selectedGame === "BINGO") {
                 currentPickCount = currentPickCount > 0 ? currentPickCount : 10;
@@ -670,7 +670,7 @@
         // --- 防呆與核心邏輯 ---
         function toggleBall(n) {
             let limit = 6;
-            if (state.selectedGame === "今彩539") limit = 5;
+            if (state.selectedGame === "Daily Cash 39") limit = 5;
             else if (state.selectedGame === "BINGO") limit = 10;
 
             if (state.playerSelection.includes(n)) {
@@ -679,19 +679,19 @@
                 if (state.playerSelection.length < limit) {
                     state.playerSelection.push(n);
                 } else {
-                    showToast(`【防呆】${state.selectedGame}最多選 ${limit} 個號碼`);
+                    showToast(`【Notice!】${state.selectedGame} can choose most ${limit} number(s)`);
                 }
             }
             render();
         }
 
         function pickStarNum(n) {
-            let limit = state.selectedGame === "3星彩" ? 3 : 4;
+            let limit = state.selectedGame === "3-Digit" ? 3 : 4;
             if (state.playerSelection.length < limit) {
                 state.playerSelection.push(n);
                 render();
             } else {
-                showToast(`【防呆】${state.selectedGame}號碼已填滿`);
+                showToast(`【Notice!】${state.selectedGame} number have been filled!`);
             }
         }
 
@@ -699,20 +699,20 @@
             let minReq = 1;
             let maxReq = 6;
 
-            if (state.selectedGame === "今彩539") {
+            if (state.selectedGame === "Daily Cash 39") {
                 minReq = 5; maxReq = 5;
-            } else if (state.selectedGame === "大樂透" || state.selectedGame === "威力彩") {
+            } else if (state.selectedGame === "Grand Lottery" || state.selectedGame === "Power Lottery") {
                 minReq = 6; maxReq = 6;
-            } else if (state.selectedGame === "3星彩") {
+            } else if (state.selectedGame === "3-Digit") {
                 minReq = 3; maxReq = 3;
-            } else if (state.selectedGame === "4星彩") {
+            } else if (state.selectedGame === "4-Digit") {
                 minReq = 4; maxReq = 4;
             } else if (state.selectedGame === "BINGO") {
                 minReq = 1; maxReq = 10;
             }
 
             if (state.playerSelection.length < minReq) {
-                showToast(`【防呆】${state.selectedGame}最少需選 ${minReq} 個號碼`);
+                showToast(`【Notice!】 ${state.selectedGame} need be chosen at least ${minReq} number`);
                 return;
             }
 
@@ -721,7 +721,7 @@
             for (let i = 0; i < state.manualTicketCount; i++) {
                 state.cart.push({
                     type: state.selectedGame,
-                    nums: ["3星彩", "4星彩"].includes(state.selectedGame)
+                    nums: ["3-Digit", "4-Digit"].includes(state.selectedGame)
                         ? [...state.playerSelection]
                         : [...state.playerSelection].sort((a, b) => a - b),
                     special: state.playerSpecial,
@@ -730,25 +730,25 @@
             }
             state.playerSelection = [];
             state.playerSpecial = null;
-            showToast(`已加入 ${state.manualTicketCount} 張自選票券`);
+            showToast(`Have added ${state.manualTicketCount} tickets.`);
             render();
         }
 
         function deleteCartItem(idx) {
             state.cart.splice(idx, 1);
-            showToast('已從購物車移除！');
+            showToast('Have been remove from the shopping list！');
             render();
         }
 
         function checkout() {
             if (state.cart.length === 0) {
-                showToast("購物車是空的喔！");
+                showToast("There is nothing on your shopping list！");
                 return;
             }
 
-            const totalCost = state.cart.reduce((s, t) => s + (["3星彩", "4星彩"].includes(t.type) ? 25 : 50), 0);
+            const totalCost = state.cart.reduce((s, t) => s + (["3-Digit", "4-Digit"].includes(t.type) ? 25 : 50), 0);
             if (state.wallet < totalCost) {
-                showToast("餘額不足！");
+                showToast("You have no enough money！");
                 return;
             }
 
@@ -843,7 +843,7 @@
             state.quizCompleted = true;
             localStorage.setItem('lottery_quiz_completed', 'true');
 
-            showToast(`結算：答對了 ${correctCount} 題，獲得 $${bonus} 元！`);
+            showToast(`Correct: ${correctCount} ,and you got $${bonus} dollars！`);
             render();
         }
 
