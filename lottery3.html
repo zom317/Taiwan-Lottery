@@ -780,14 +780,17 @@
         // ========================
         // 抽題工具（40 題不重複優先隨機抽 10 題）
         // ========================
-        function shuffleArray(arr) {
-            const copy = [...arr];
-            for (let i = copy.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [copy[i], copy[j]] = [copy[j], copy[i]];
-            }
-            return copy;
-        }
+        ffunction shuffleArray(arr) {
+    const copy = [...arr];
+
+    for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+
+    return copy;
+}
 
         function drawQuizSet(isPractice = false) {
             let unseen = QUIZ_BANK.filter(q => !state.drawnHistoryIds.includes(q.id));
