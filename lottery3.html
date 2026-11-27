@@ -1,0 +1,1603 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>幸運星公益彩券模擬器｜7日理性與夢想試煉</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            user-select: none;
+            overflow: hidden;
+            background: linear-gradient(135deg, #e0e7ff 0%, #f8fafc 50%, #fef3c7 100%);
+        }
+
+        .ball {
+            transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+            cursor: pointer;
+        }
+
+        .ball:active {
+            transform: scale(0.9);
+        }
+
+        .ball-selected {
+            background-color: #f59e0b !important;
+            border-color: #b45309 !important;
+            color: #ffffff !important;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+        }
+
+        .special-selected {
+            background-color: #f43f5e !important;
+            border-color: #be123c !important;
+            color: #ffffff !important;
+            box-shadow: 0 2px 8px rgba(244, 63, 94, 0.4);
+        }
+
+        .scroll-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .scroll-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        .scroll-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .win-card {
+            border: 2px solid #fbbf24;
+            background-color: #fffbeb;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.25s ease-out forwards;
+        }
+
+        @keyframes popBadge {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.25); }
+            100% { transform: scale(1); }
+        }
+
+        .pop-badge {
+            animation: popBadge 0.28s ease-out;
+        }
+    </style>
+</head>
+
+<audio id="bgm" loop>
+    <source src="bgm.mp3" type="audio/mpeg">
+    您的瀏覽器不支援音訊播放。
+</audio>
+
+<body class="h-screen w-screen flex items-center justify-center p-2 md:p-4">
+
+    <div id="game-container"
+        class="relative w-full h-full max-w-6xl max-h-[860px] bg-white rounded-3xl shadow-2xl border border-indigo-100 overflow-hidden flex flex-col">
+
+        <!-- 頂部狀態欄 -->
+        <header class="bg-gradient-to-r from-indigo-700 via-indigo-600 to-violet-600 text-white px-4 md:px-5 py-3 flex flex-wrap justify-between items-center gap-3 shadow-md flex-shrink-0 z-20">
+            <div class="flex items-center gap-3 md:gap-4">
+                <div class="bg-white/15 backdrop-blur-sm px-3.5 py-1.5 rounded-xl border border-white/20">
+                    <div class="text-[11px] text-indigo-100 font-medium">錢包餘額</div>
+                    <div class="font-black text-xl tracking-tight text-amber-300" id="wallet-display">$1,000</div>
+                </div>
+                <div class="hidden sm:flex flex-col">
+                    <div class="flex items-center gap-2">
+                        <span id="day-badge" class="bg-amber-400 text-indigo-950 text-xs font-black px-2.5 py-0.5 rounded-full">第 1 / 7 期</span>
+                        <span class="text-xs text-indigo-100">歷史最高: <strong id="high-score-display" class="text-white">$1,000</strong></span>
+                    </div>
+                    <div class="mt-1.5 flex items-center gap-2">
+                        <span class="text-[11px] text-indigo-200">贏家目標 $3,000</span>
+                        <div class="w-28 h-2 bg-indigo-900/50 rounded-full overflow-hidden">
+                            <div id="goal-bar" class="h-full bg-gradient-to-r from-amber-300 to-yellow-400 transition-all duration-500" style="width: 33%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右側常駐功能列（隨時可點知識測驗） -->
+            <div class="flex items-center gap-1.5 md:gap-2">
+                <button type="button" id="nav-quiz-btn" onclick="openQuiz()"
+                    class="bg-amber-400 hover:bg-amber-300 text-indigo-950 text-xs font-black px-3 py-2 rounded-xl transition-all shadow-sm active:scale-95 flex items-center gap-1.5">
+                    <span>📝</span><span>知識測驗</span>
+                    <span id="nav-quiz-badge" class="bg-indigo-900 text-amber-300 px-1.5 py-0.5 rounded-full text-[10px]">+$500</span>
+                </button>
+                <button type="button" onclick="openIntroFromNav()"
+                    class="bg-white/15 hover:bg-white/25 text-xs font-bold px-3 py-2 rounded-xl transition-colors flex items-center gap-1.5">
+                    <span>📖</span><span class="hidden md:inline">劇情引導</span>
+                </button>
+                <button type="button" onclick="openGallery()"
+                    class="bg-white/15 hover:bg-white/25 text-xs font-bold px-3 py-2 rounded-xl transition-colors flex items-center gap-1.5">
+                    <span>🏆</span><span class="hidden sm:inline">圖鑑</span>
+                    <span id="ending-count-badge" class="bg-amber-400 text-indigo-950 px-1.5 rounded-full text-[10px]">0/6</span>
+                </button>
+                <button type="button" id="music-toggle" onclick="toggleMusic()" title="開關背景音樂"
+                    class="bg-white/15 hover:bg-white/25 w-9 h-9 rounded-xl transition-colors flex items-center justify-center">
+                    <span id="music-icon">🔇</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- 主要內容區域 -->
+        <main id="screen-content" class="flex-grow overflow-y-auto p-5 md:p-6 scroll-container relative bg-slate-50/70">
+            <!-- 內容動態注入區 -->
+        </main>
+
+        <!-- 提示框 Toast -->
+        <div id="toast"
+            class="absolute bottom-8 left-1/2 -translate-x-1/2 bg-slate-900/90 text-white text-sm font-bold px-6 py-2.5 rounded-full shadow-xl opacity-0 transition-opacity duration-300 pointer-events-none z-50 whitespace-nowrap">
+        </div>
+    </div>
+
+    <script>
+        // ========================
+        // 遊戲資料與設定
+        // ========================
+        const MAX_ROUNDS = 7;
+        const QUIZ_DRAW_COUNT = 10;
+
+        const GAMES = [
+            { name: "大樂透", price: 50, desc: "49選6｜頭獎 1 億", icon: "🎱", color: "from-amber-50 to-orange-50 border-amber-200 hover:border-amber-400" },
+            { name: "威力彩", price: 50, desc: "雙區選號｜頭獎 2 億", icon: "⚡", color: "from-red-50 to-rose-50 border-red-200 hover:border-red-400" },
+            { name: "今彩539", price: 50, desc: "39選5｜頭獎 800 萬", icon: "🍀", color: "from-emerald-50 to-teal-50 border-emerald-200 hover:border-emerald-400" },
+            { name: "3星彩", price: 25, desc: "3位數字｜銅板輕鬆玩", icon: "⭐", color: "from-sky-50 to-blue-50 border-sky-200 hover:border-sky-400" },
+            { name: "4星彩", price: 25, desc: "4位數字｜最高 5 萬", icon: "🌟", color: "from-indigo-50 to-purple-50 border-indigo-200 hover:border-indigo-400" },
+            { name: "BINGO", price: 50, desc: "80選10｜中5號即有獎", icon: "🎯", color: "from-fuchsia-50 to-pink-50 border-fuchsia-200 hover:border-fuchsia-400" }
+        ];
+
+        const CATEGORY_STYLE = {
+            "公益與心態": { icon: "🏛️", badge: "bg-sky-100 text-sky-800" },
+            "機率數學": { icon: "🎲", badge: "bg-violet-100 text-violet-800" },
+            "心理謬誤": { icon: "🧠", badge: "bg-rose-100 text-rose-800" },
+            "理財規劃": { icon: "💰", badge: "bg-emerald-100 text-emerald-800" }
+        };
+
+        // ========================
+        // 40 題完整題庫（公益與心態 / 機率數學 / 心理謬誤 / 理財規劃）
+        // ========================
+        const QUIZ_BANK = [
+            // --- 公益與心態 (1~10) ---
+            {
+                id: "q1", category: "公益與心態", type: "single",
+                question: "購買彩券除了娛樂之外，其中一個重要的社會意義是什麼？",
+                options: [
+                    { v: "A", t: "中獎致富的唯一途徑" },
+                    { v: "B", t: "支持社會公益事業" },
+                    { v: "C", t: "證明個人運氣比別人好" },
+                    { v: "D", t: "快速解決財務問題" }
+                ],
+                answer: ["B"],
+                explain: "台灣公益彩券的盈餘主要挹注於社會福利、國民年金與全民健保等公益用途。"
+            },
+            {
+                id: "q2", category: "公益與心態", type: "single",
+                question: "從數學機率的角度來看，購買一張彩券中頭獎的機率通常是：",
+                options: [
+                    { v: "A", t: "非常高，只要多買幾張就穩中" },
+                    { v: "B", t: "極低，接近於零" },
+                    { v: "C", t: "和擲硬幣一樣，有 50% 的機率" }
+                ],
+                answer: ["B"],
+                explain: "以大樂透為例，頭獎機率約為 1/1,398 萬，屬於極低機率事件。"
+            },
+            {
+                id: "q3", category: "公益與心態", type: "single",
+                question: "將多少比例的預算用於購買彩券，才是比較理性的行為？",
+                options: [
+                    { v: "A", t: "超過收入的 50%" },
+                    { v: "B", t: "40% ~ 50% 之間" },
+                    { v: "C", t: "僅拿閒置娛樂預算且不影響生活" },
+                    { v: "D", t: "越多越好" }
+                ],
+                answer: ["C"],
+                explain: "彩券屬於休閒娛樂消費，應嚴格控制在完全不影響生活與儲蓄的閒錢範圍內。"
+            },
+            {
+                id: "q4", category: "公益與心態", type: "multi",
+                question: "購買彩券動機若是改善生活，更穩健長期的財務規劃方式應包含？",
+                options: [
+                    { v: "A", t: "定期儲蓄與投資" },
+                    { v: "B", t: "依賴購買大量彩券" },
+                    { v: "C", t: "制定詳細預算和支出計畫" },
+                    { v: "D", t: "尋求專業理財建議" }
+                ],
+                answer: ["A", "C", "D"],
+                explain: "穩健的財務改善來自紀律儲蓄、預算控管與正確理財，而非寄託於低機率彩券。"
+            },
+            {
+                id: "q5", category: "公益與心態", type: "single",
+                question: "關於下列敘述，哪項最可能有「賭徒謬誤」？",
+                options: [
+                    { v: "A", t: "相信連輸越多，下次中獎機率就越高" },
+                    { v: "B", t: "認為中獎號碼完全無法預測" },
+                    { v: "C", t: "理解每次開獎皆為獨立事件" },
+                    { v: "D", t: "知道多數人不會中頭獎" }
+                ],
+                answer: ["A"],
+                explain: "誤以為過去連續未中會「拉高」下一次中獎率，正是典型的賭徒謬誤。"
+            },
+            {
+                id: "q6", category: "公益與心態", type: "single",
+                question: "下列哪一種行為最符合購買彩券的「理性態度」？",
+                options: [
+                    { v: "A", t: "視為低機率樂透遊戲，僅用閒錢參與" },
+                    { v: "B", t: "為追回輸掉的錢不斷增加投入" },
+                    { v: "C", t: "深信研究歷史數據可預測下期號碼" },
+                    { v: "D", t: "為致富犧牲日常必需品" }
+                ],
+                answer: ["A"],
+                explain: "把彩券定位為小額娛樂與做公益，不追單、不迷信明牌，才是最健康的心態。"
+            },
+            {
+                id: "q7", category: "公益與心態", type: "single",
+                question: "如果連續多期未中獎，理性的態度應該是：",
+                options: [
+                    { v: "A", t: "根據賭徒謬誤，下期機率將大幅提高" },
+                    { v: "B", t: "接受開獎為獨立事件，維持既定預算" },
+                    { v: "C", t: "立即投入更多資金拚翻本" }
+                ],
+                answer: ["B"],
+                explain: "每一期開獎彼此獨立，不會因為連槓而改變你手中下一張彩券的中獎機率。"
+            },
+            {
+                id: "q8", category: "公益與心態", type: "single",
+                question: "購買彩券時，哪種行為屬於高風險？",
+                options: [
+                    { v: "A", t: "買小額彩券作為休閒" },
+                    { v: "B", t: "使用信用卡預借現金或借貸買大量彩券" },
+                    { v: "C", t: "設好購買上限金額" },
+                    { v: "D", t: "控制在娛樂預算內" }
+                ],
+                answer: ["B"],
+                explain: "絕對不可透過借貸或信用卡透支購買彩券，極易陷入難以挽回的財務危機。"
+            },
+            {
+                id: "q9", category: "公益與心態", type: "multi",
+                question: "哪些因素可確保您以健康心態參與彩券娛樂？",
+                options: [
+                    { v: "A", t: "只買負擔得起的金額" },
+                    { v: "B", t: "視為休閒而非投資工具" },
+                    { v: "C", t: "事先建立清楚的預算與財務觀念" },
+                    { v: "D", t: "當期未中會馬上加倍投入" },
+                    { v: "E", t: "不影響儲蓄或必要支出" }
+                ],
+                answer: ["A", "B", "C", "E"],
+                explain: "未中即加倍投入是極高風險的追單心態，其餘四項皆有助維持健康娛樂界線。"
+            },
+            {
+                id: "q10", category: "公益與心態", type: "multi",
+                question: "若朋友過度沉迷彩券，哪種建議「最不理性」？",
+                options: [
+                    { v: "A", t: "鼓勵繼續買，說大獎就在下一期" },
+                    { v: "B", t: "建議尋求財務規劃或心理輔導" },
+                    { v: "C", t: "借錢給他買，期待他中獎還錢" },
+                    { v: "D", t: "告訴他彩券是唯一的翻身機會" }
+                ],
+                answer: ["A", "C", "D"],
+                explain: "面對沉迷的親友，應給予理性關懷並建議尋求專業協助，切勿鼓吹追單或金錢借貸。"
+            },
+
+            // --- 機率數學 (11~20) ---
+            {
+                id: "q11", category: "機率數學", type: "single",
+                question: "購買大樂透時，選「01, 02, 03, 04, 05, 06」與隨機選一組分散號碼相比，哪一組中頭獎的機率較高？",
+                options: [
+                    { v: "A", t: "隨機分散的號碼機率高得多" },
+                    { v: "B", t: "兩組號碼中頭獎的機率完全一樣" },
+                    { v: "C", t: "連號在數學上永遠不可能被開出" },
+                    { v: "D", t: "連號機率較高，因為開獎球容易相鄰" }
+                ],
+                answer: ["B"],
+                explain: "在公平隨機開獎中，每一組 6 個號碼的組合被抽中的機率完全相同（皆為 1/13,983,816）。"
+            },
+            {
+                id: "q12", category: "機率數學", type: "single",
+                question: "統計上常說彩券的「期望值（Expected Value）」小於票價成本，這代表什麼意思？",
+                options: [
+                    { v: "A", t: "買一張就百分之百會賠錢" },
+                    { v: "B", t: "長期大量購買下來，平均拿回的獎金會低於投入的總金額" },
+                    { v: "C", t: "彩券發行機構一定會虧損" },
+                    { v: "D", t: "頭獎獎金比一張票價還低" }
+                ],
+                answer: ["B"],
+                explain: "公益彩券獎金支出率通常低於 100%（其餘用於公益盈餘與管銷），因此長期來看期望報酬為負。"
+            },
+            {
+                id: "q13", category: "機率數學", type: "single",
+                question: "拋一枚公平硬幣，已經連續出現 9 次「正面」，請問第 10 次拋出「反面」的機率是多少？",
+                options: [
+                    { v: "A", t: "超過 90%，因為該輪到反面了" },
+                    { v: "B", t: "剛好 50%" },
+                    { v: "C", t: "低於 10%，因為今天正面氣勢很強" },
+                    { v: "D", t: "100%，不可能連續 10 次正面" }
+                ],
+                answer: ["B"],
+                explain: "硬幣沒有記憶，每一次投擲都是獨立事件，第 10 次出現正面或反面的機率依然各為 50%。"
+            },
+            {
+                id: "q14", category: "機率數學", type: "single",
+                question: "若某款彩券中頭獎機率是 1,000 萬分之一，小明一口氣買了 2 張不同號碼，他的頭獎機率會變成多少？",
+                options: [
+                    { v: "A", t: "變成 500 萬分之一（雖翻倍但依然極低）" },
+                    { v: "B", t: "變成 50%，因為不是中就是沒中" },
+                    { v: "C", t: "變成 100 萬分之一" },
+                    { v: "D", t: "跟只買 1 張完全沒有任何差異" }
+                ],
+                answer: ["A"],
+                explain: "買 2 張不同號碼使機率從 1/1,000 萬變為 2/1,000 萬（即 1/500 萬），切勿把「兩種結果」誤當成 50% 機率。"
+            },
+            {
+                id: "q15", category: "機率數學", type: "single",
+                question: "關於歷史統計中的「熱門號（近期常開）」與「冷門號（很久沒開）」，在公平開獎機中下期哪種較容易開出？",
+                options: [
+                    { v: "A", t: "熱門號，因為那顆球最近特別旺" },
+                    { v: "B", t: "冷門號，因為系統會自動補齊次數" },
+                    { v: "C", t: "兩者被抽出的機率完全相同" },
+                    { v: "D", t: "只有頭獎連槓時冷門號才會開出" }
+                ],
+                answer: ["C"],
+                explain: "每一顆開獎球在每次獨立開獎時被抽出的機率都是相等的，歷史紀錄不會影響下一次抽球。"
+            },
+            {
+                id: "q16", category: "機率數學", type: "single",
+                question: "部分刮刮樂主打「中獎率高達 50%」，這通常意味著什麼？",
+                options: [
+                    { v: "A", t: "每買 2 張就保證一定會淨賺錢" },
+                    { v: "B", t: "中獎包含「獎金等於或低於票價」的小獎，不代表有 50% 機率獲利" },
+                    { v: "C", t: "平均報酬率高達 150%" },
+                    { v: "D", t: "買滿 10 張保證中頭獎" }
+                ],
+                answer: ["B"],
+                explain: "「中獎率」與「賺錢率」不同，許多小獎僅是拿回部分本金（例如花 $200 中 $100），仍屬於虧損。"
+            },
+            {
+                id: "q17", category: "機率數學", type: "single",
+                question: "關於「自選號碼」與「電腦機選」的中獎機率，下列何者最正確？",
+                options: [
+                    { v: "A", t: "電腦機選的頭獎機率明顯較高" },
+                    { v: "B", t: "用家人生日自選的中獎機率比較高" },
+                    { v: "C", t: "兩者中獎機率完全一樣，但避開熱門生日號可減少中獎時與他人平分頭獎的機會" },
+                    { v: "D", t: "自選號碼無法中特別號" }
+                ],
+                answer: ["C"],
+                explain: "所有號碼組合的中獎率完全一致；但許多人會選 1~31 號（日期），避開大眾熱門組合可在萬一中獎時降低撞號均分風險。"
+            },
+            {
+                id: "q18", category: "機率數學", type: "multi",
+                question: "關於「大數法則（Law of Large Numbers）」在彩券上的啟示，下列哪些說法正確？",
+                options: [
+                    { v: "A", t: "購買次數越多，平均報酬率越會趨近於負期望值（總獎金小於總投入）" },
+                    { v: "B", t: "只要買的次數夠多，最終一定能回本大賺" },
+                    { v: "C", t: "短期內可能靠運氣獲利，但長期持續大額投入幾乎必然虧損" },
+                    { v: "D", t: "每次開獎互相獨立，不會自動「補償」你之前的虧損" }
+                ],
+                answer: ["A", "C", "D"],
+                explain: "在負期望值的遊戲裡，樣本數（購買次數）越大，實際平均結果只會越貼近理論虧損比例。"
+            },
+            {
+                id: "q19", category: "機率數學", type: "single",
+                question: "當大樂透或威力彩連續多期頭獎槓龜、累積獎金飆高時，單張彩券「中頭獎的機率」會如何變化？",
+                options: [
+                    { v: "A", t: "跟著獎金一起變高" },
+                    { v: "B", t: "保持完全不變" },
+                    { v: "C", t: "因為買的人變多而降低一半" },
+                    { v: "D", t: "連槓超過 10 期就會翻倍" }
+                ],
+                answer: ["B"],
+                explain: "連槓只會改變累積獎金與買氣（可能增加多人均分機率），並不會改變單張號碼組合的中獎機率。"
+            },
+            {
+                id: "q20", category: "機率數學", type: "single",
+                question: "若某抽獎遊戲單次中獎機率是 10%，連續獨立抽 10 次，「至少中一次獎」的機率為何？",
+                options: [
+                    { v: "A", t: "剛好 100%，一定會中獎" },
+                    { v: "B", t: "約 65.1%（並非 100%，仍有約 34.9% 機率全槓龜）" },
+                    { v: "C", t: "永遠停在 10%" },
+                    { v: "D", t: "0%" }
+                ],
+                answer: ["B"],
+                explain: "10 次都沒中的機率是 0.9 的 10 次方（約 34.9%），因此至少中一次的機率約為 65.1%，切勿直接將 10% × 10。"
+            },
+
+            // --- 心理謬誤與行為偏誤 (21~30) ---
+            {
+                id: "q21", category: "心理謬誤", type: "single",
+                question: "與賭徒謬誤相對的「熱手謬誤（Hot-hand Fallacy）」是指哪種心態？",
+                options: [
+                    { v: "A", t: "認為連輸幾次後，下一把一定會轉運" },
+                    { v: "B", t: "認為剛連續中了幾次小獎代表「手氣正旺」，下一張更容易中大獎" },
+                    { v: "C", t: "認為氣溫較高時比較容易中獎" },
+                    { v: "D", t: "認為應該冷靜遵守預算" }
+                ],
+                answer: ["B"],
+                explain: "熱手謬誤是誤以為過去的連續好運會「延續」到下一次隨機事件中，進而過度自信並加大下注。"
+            },
+            {
+                id: "q22", category: "心理謬誤", type: "single",
+                question: "「我已經花了一萬元養這組號碼，現在停手前面就全白費了！」這屬於哪種心理陷阱？",
+                options: [
+                    { v: "A", t: "複利效應" },
+                    { v: "B", t: "沉沒成本謬誤（Sunk Cost Fallacy）" },
+                    { v: "C", t: "分散風險原則" },
+                    { v: "D", t: "理性止損觀念" }
+                ],
+                answer: ["B"],
+                explain: "已經花掉且無法回收的金錢屬於「沉沒成本」，不應該因為不甘心而繼續投入更多金錢擴大損失。"
+            },
+            {
+                id: "q23", category: "心理謬誤", type: "single",
+                question: "對獎時發現「只差 1 個號碼就中頭獎」，反而讓人更興奮想立刻再買更多張，這被稱為？",
+                options: [
+                    { v: "A", t: "差一點中獎效應（Near-miss Effect）" },
+                    { v: "B", t: "邊際效益遞減" },
+                    { v: "C", t: "資產配置效應" },
+                    { v: "D", t: "通膨效應" }
+                ],
+                answer: ["A"],
+                explain: "「差一號中頭獎」容易刺激大腦產生「我快贏了」的錯覺，但實際上它不會讓下一期變得更容易中獎。"
+            },
+            {
+                id: "q24", category: "心理謬誤", type: "single",
+                question: "有人主張「只要輸了就加倍下注（馬丁格爾策略），總有一天贏一把就能全賺回來」，現實中為何極度危險？",
+                options: [
+                    { v: "A", t: "因為加倍下注會讓單次機率變成 0%" },
+                    { v: "B", t: "連輸幾次後下注金額會呈指數爆炸成長，很快超出資金或投注上限而慘賠破產" },
+                    { v: "C", t: "因為法律規定不能加倍買" },
+                    { v: "D", t: "這個策略其實在現實中穩賺不賠" }
+                ],
+                answer: ["B"],
+                explain: "馬丁格爾策略只有在「資金無限且無投注上限」的理論中成立；現實裡連輸 10 次就需投入 1,024 倍初始本金，極易破產。"
+            },
+            {
+                id: "q25", category: "心理謬誤", type: "single",
+                question: "媒體常大幅報導頭獎得主的喜訊，卻極少報導數百萬名未中獎者，這容易讓人產生哪種認知偏差？",
+                options: [
+                    { v: "A", t: "倖存者偏差（Survivorship Bias）與可得性偏誤" },
+                    { v: "B", t: "通貨膨脹錯覺" },
+                    { v: "C", t: "風險趨避偏差" },
+                    { v: "D", t: "節儉偏誤" }
+                ],
+                answer: ["A"],
+                explain: "只看見少數成功中獎的案例、忽略龐大的未中獎分母，會使大腦錯誤高估自己中大獎的機率。"
+            },
+            {
+                id: "q26", category: "心理謬誤", type: "single",
+                question: "深信「自己花時間研究開獎走勢圖、親手畫單，就能提高純隨機樂透的中獎率」，屬於哪種心理偏誤？",
+                options: [
+                    { v: "A", t: "控制錯覺（Illusion of Control）" },
+                    { v: "B", t: "學習曲線效應" },
+                    { v: "C", t: "複利效應" },
+                    { v: "D", t: "機會成本意識" }
+                ],
+                answer: ["A"],
+                explain: "控制錯覺是指人們誤以為自己能透過技巧或儀式，去影響本質上完全隨機且不可控的結果。"
+            },
+            {
+                id: "q27", category: "心理謬誤", type: "single",
+                question: "許多彩券名店門口掛滿「本店開出頭獎」紅布條，為何去名店買並不會讓你的「單張中獎率」變高？",
+                options: [
+                    { v: "A", t: "因為開過大獎的機器之後就不會再開獎" },
+                    { v: "B", t: "每張彩券機率獨立相同；名店常開大獎主因是「銷量遠高於一般店家」" },
+                    { v: "C", t: "因為紅布條全部都是假的" },
+                    { v: "D", t: "其實去名店買單張中獎機率真的比較高" }
+                ],
+                answer: ["B"],
+                explain: "如果一家店的銷售張數是其他店的 20 倍，統計上開出頭獎的次數自然較多，但你手中單張票的中獎率完全相同。"
+            },
+            {
+                id: "q28", category: "心理謬誤", type: "single",
+                question: "開獎結果公布後心想「我就知道 17 號今天一定會開，早知道就選它了！」，這屬於哪種心理偏誤？",
+                options: [
+                    { v: "A", t: "預知能力覺醒" },
+                    { v: "B", t: "後見之明偏誤（Hindsight Bias）" },
+                    { v: "C", t: "理性統計分析" },
+                    { v: "D", t: "財務紀律表現" }
+                ],
+                answer: ["B"],
+                explain: "事後諸葛（後見之明偏誤）會讓我們誤以為自己原本就預測得到結果，進而高估自己下一次的選號能力。"
+            },
+            {
+                id: "q29", category: "心理謬誤", type: "single",
+                question: "拿到一筆年終獎金或小額中獎時，覺得「反正這不是辛苦賺來的，全拿去重壓彩券沒關係」，這屬於？",
+                options: [
+                    { v: "A", t: "心理帳戶（Mental Accounting）陷阱" },
+                    { v: "B", t: "資產活化策略" },
+                    { v: "C", t: "定期定額思維" },
+                    { v: "D", t: "防禦型理財" }
+                ],
+                answer: ["A"],
+                explain: "無論金錢來源為何，每一塊錢的實際價值都相同；將意外之財視為「可以隨便花掉的錢」是常見的心理帳戶陷阱。"
+            },
+            {
+                id: "q30", category: "心理謬誤", type: "multi",
+                question: "以下哪些念頭都屬於容易讓人過度投入彩券的「非理性思考」？",
+                options: [
+                    { v: "A", t: "連槓 10 期了，這期不買太可惜，一定會開出來" },
+                    { v: "B", t: "只記住自己中獎的那幾次，故意忽略累積花掉的成本" },
+                    { v: "C", t: "設立每月固定上限，花完就果斷停手" },
+                    { v: "D", t: "相信花錢買「神秘明牌公式」就能破解隨機開獎" }
+                ],
+                answer: ["A", "B", "D"],
+                explain: "A 是賭徒謬誤、B 是選擇性記憶（確認偏誤）、D 是控制錯覺與詐騙風險；唯有 C 屬於理性自我約束。"
+            },
+
+            // --- 個人理財與風險管理 (31~40) ---
+            {
+                id: "q31", category: "理財規劃", type: "single",
+                question: "在進行投資或娛樂消費前，理財專家通常建議優先存好多少個月生活費的「緊急預備金」？",
+                options: [
+                    { v: "A", t: "0 個月，有錢就全數投入市場" },
+                    { v: "B", t: "3 至 6 個月的必要生活支出" },
+                    { v: "C", t: "只需要 3 天的餐費" },
+                    { v: "D", t: "存滿 50 年的生活費才行" }
+                ],
+                answer: ["B"],
+                explain: "3 至 6 個月的緊急預備金能應對突發失業、生病或意外開銷，避免被迫高利借貸或認賠變賣資產。"
+            },
+            {
+                id: "q32", category: "理財規劃", type: "single",
+                question: "常見的「50 / 30 / 20 理財法則」中，20% 通常建議配置於哪一項？",
+                options: [
+                    { v: "A", t: "購買彩券與高風險投機" },
+                    { v: "B", t: "儲蓄、長期投資或償還負債" },
+                    { v: "C", t: "精品與衝動購物" },
+                    { v: "D", t: "聚餐與旅遊娛樂" }
+                ],
+                answer: ["B"],
+                explain: "50/30/20 法則建議將稅後收入分為：50% 必要生活支出、30% 彈性娛樂想要支出、20% 儲蓄與理財投資。"
+            },
+            {
+                id: "q33", category: "理財規劃", type: "single",
+                question: "關於「複利效應（Compound Interest）」，下列敘述何者正確？",
+                options: [
+                    { v: "A", t: "只有單利才會隨時間累積利息" },
+                    { v: "B", t: "將本金產生的利息繼續滾入再投資，時間越長資產成長威力越顯著" },
+                    { v: "C", t: "複利只會發生在投資上，高利貸不會複利" },
+                    { v: "D", t: "買彩券是發揮複利效應的最佳工具" }
+                ],
+                answer: ["B"],
+                explain: "長期正向複利能讓小額定期投資累積可觀財富；反之，信用卡循環利息等「負向複利」則會讓債務雪球越滾越大。"
+            },
+            {
+                id: "q34", category: "理財規劃", type: "single",
+                question: "如果同時背負年利率 15% 的「信用卡循環利息」與一筆閒錢，最理性的優先處理順序通常是？",
+                options: [
+                    { v: "A", t: "把閒錢拿去買彩券拚一把還債" },
+                    { v: "B", t: "優先清償高利率的信用卡循環債務" },
+                    { v: "C", t: "繼續只繳最低應繳金額，把錢放在 1% 活存" },
+                    { v: "D", t: "再辦一張新卡以卡養卡" }
+                ],
+                answer: ["B"],
+                explain: "清償 15% 年利率的高利負債，等同於立刻獲得「保證無風險 15%」的財務回報，應列為最優先事項。"
+            },
+            {
+                id: "q35", category: "理財規劃", type: "single",
+                question: "理財觀念中常說的「先支付給自己（Pay Yourself First）」指的是什麼？",
+                options: [
+                    { v: "A", t: "領到薪水立刻去吃大餐犒賞自己" },
+                    { v: "B", t: "薪水入帳時，先將固定比例自動轉入儲蓄或投資帳戶，剩下的再做消費預算" },
+                    { v: "C", t: "發薪日先買一疊刮刮樂試手氣" },
+                    { v: "D", t: "月底如果剛好有剩錢再決定要不要存" }
+                ],
+                answer: ["B"],
+                explain: "「收入 − 儲蓄 = 支出」比「收入 − 支出 = 儲蓄」更能確實守住儲蓄目標，避免成為月光族。"
+            },
+            {
+                id: "q36", category: "理財規劃", type: "single",
+                question: "如果真的幸運中了一筆大額彩券獎金，下列哪項做法最能避免幾年後「暴富又破產」的悲劇？",
+                options: [
+                    { v: "A", t: "立刻高調炫耀並辭職大肆揮霍" },
+                    { v: "B", t: "聽信網路陌生人的高報酬投資群組把錢全押進去" },
+                    { v: "C", t: "保持低調冷靜，確認稅務規定、清償負債並尋求合法專業財務規劃" },
+                    { v: "D", t: "把獎金全部再拿去買下一期彩券" }
+                ],
+                answer: ["C"],
+                explain: "許多樂透得主因缺乏規劃與過度消費而在數年內耗盡獎金；冷靜低調與妥善資產配置才是守財關鍵。"
+            },
+            {
+                id: "q37", category: "理財規劃", type: "single",
+                question: "關於「通貨膨脹（Inflation）」對個人財務的影響，下列何者正確？",
+                options: [
+                    { v: "A", t: "現金長期放在床底下永遠不會損失購買力" },
+                    { v: "B", t: "物價持續上漲會使現金的實質購買力隨時間縮水" },
+                    { v: "C", t: "通貨膨脹代表東西會越來越便宜" },
+                    { v: "D", t: "只要不記帳就不會受到通膨影響" }
+                ],
+                answer: ["B"],
+                explain: "若物價年漲 2%~3%，閒置現金若未適度配置於穩健理財工具，長期下來能買到的東西會越來越少。"
+            },
+            {
+                id: "q38", category: "理財規劃", type: "single",
+                question: "在日常消費決策中，區分「需要（Needs）」與「想要（Wants）」的主要好處是什麼？",
+                options: [
+                    { v: "A", t: "讓人從此完全不能有任何休閒娛樂" },
+                    { v: "B", t: "優先保障基本生活，減少衝動消費並守住儲蓄目標" },
+                    { v: "C", t: "讓銀行自動提高信用卡額度" },
+                    { v: "D", t: "能準確預測明天的股市漲跌" }
+                ],
+                answer: ["B"],
+                explain: "先滿足必要支出，再在預算範圍內安排「想要」的娛樂消費，才能兼顧生活品質與財務安全。"
+            },
+            {
+                id: "q39", category: "理財規劃", type: "single",
+                question: "投資理財常強調「不要把所有雞蛋放在同一個籃子裡」，這是指什麼原則？",
+                options: [
+                    { v: "A", t: "集中所有資金單壓一檔高風險標的" },
+                    { v: "B", t: "分散配置資產以降低單一標的暴跌帶來的風險" },
+                    { v: "C", t: "每種彩券各買 100 張就能穩賺不賠" },
+                    { v: "D", t: "完全不要做任何理財規劃" }
+                ],
+                answer: ["B"],
+                explain: "透過多元資產或大盤指數分散風險，能避免單一公司或產業出事時造成毀滅性虧損。"
+            },
+            {
+                id: "q40", category: "理財規劃", type: "multi",
+                question: "下列哪些習慣有助於建立穩健且長久的個人財務健康？",
+                options: [
+                    { v: "A", t: "定期記帳並檢視每月收支流向" },
+                    { v: "B", t: "依個人風險承受度，採取長期分散的定期定額投資" },
+                    { v: "C", t: "遇到標榜「保證高獲利、零風險」的投資方案保持高度警覺" },
+                    { v: "D", t: "為了快速翻身，向親友借錢買彩券或高槓桿投機" }
+                ],
+                answer: ["A", "B", "C"],
+                explain: "記帳、長期分散投資與防範高報酬詐騙都是健康理財的核心；借貸投機則可能引發嚴重財務危機。"
+            }
+        ];
+
+        const ENDINGS = {
+            BILLIONAIRE: {
+                id: "BILLIONAIRE", num: 1, title: "傳奇億萬富翁", subtitle: "財神爺親吻的奇蹟之人",
+                icon: "👑", badge: "SSR 傳說結局", theme: "from-amber-400 via-yellow-500 to-orange-500",
+                hint: "達成條件：結算時錢包資產達到 $100,000 以上。",
+                story: "開獎螢幕閃爍的那一刻，整間「幸運星彩券行」瞬間沸騰！你竟然以極低的機率抱回超級大獎。福伯激動地幫你泡了一壺好茶，提醒你「暴富更要冷靜」。領獎後，你提撥了一筆善款回饋公益團體，其餘交由專業理財規劃，正式邁向財富自由的傳奇人生！"
+            },
+            LUCKY_WINNER: {
+                id: "LUCKY_WINNER", num: 2, title: "幸運投資贏家", subtitle: "見好就收的智慧獲利者",
+                icon: "💎", badge: "SR 贏家結局", theme: "from-emerald-500 via-teal-500 to-cyan-600",
+                hint: "達成條件：未破產且結算時資產達到 $3,000 ~ $99,999。",
+                story: "這 7 天的試煉下來，你的手氣旺得讓人羨慕！不只達成 $3,000 的目標，還懂得適時停手鎖住戰果。你帶著這筆意外之財請自己與家人吃了一頓豐盛大餐，剩下的全數存進定期定額帳戶。福伯笑著揮手：「懂享受又懂留存，下次路過再來泡茶！」"
+            },
+            RATIONAL_MASTER: {
+                id: "RATIONAL_MASTER", num: 3, title: "理性理財大師", subtitle: "看透機率與人性的真贏家",
+                icon: "🧠", badge: "TRUE 隱藏真結局", theme: "from-indigo-600 via-violet-600 to-purple-600",
+                hint: "達成條件：知識測驗答對 8 題以上、總投注不超過 $500，且結算時守住本金（$1,000 以上）。",
+                story: "你沒有被頭獎的億萬光芒沖昏頭，而是冷靜地完成了公益與機率知識測驗，只用極小額的閒錢體驗樂趣，完美守住了自己的資產！福伯對你豎起大拇指：「看過這麼多客人，你是最清醒的一位。公益彩券本來就是『買一份希望、做一份公益』，人生真正的財富還是掌握在自己手裡！」"
+            },
+            ORDINARY_CHARITY: {
+                id: "ORDINARY_CHARITY", num: 4, title: "平凡公益小確幸", subtitle: "輕鬆體驗、平常心回歸生活",
+                icon: "☕", badge: "NORMAL 一般結局", theme: "from-sky-500 via-blue-500 to-indigo-500",
+                hint: "達成條件：結束時未破產，資產介於 $25 ~ $2,999（未觸發隱藏結局）。",
+                story: "7 天的彩券行之旅落幕了。雖然沒有上演一夕致富的電影情節，但每次對獎時心跳加速的樂趣依然讓人難忘。你整理好剩下的零錢，笑著對福伯說：「沒中大獎沒關係，就當作支持公益啦！」帶著滿滿正能量，你踏實地回到日常工作與生活。"
+            },
+            RATIONAL_BANKRUPT: {
+                id: "RATIONAL_BANKRUPT", num: 5, title: "理性止損的教訓", subtitle: "運氣背了點，好險只花閒錢",
+                icon: "🛡️", badge: "END 體驗結局", theme: "from-slate-600 via-slate-700 to-zinc-800",
+                hint: "達成條件：測驗及格（6 題以上），但娛樂預算歸零破產（< $25）。",
+                story: "無奈這 7 天財神爺徹底休假，你的 $1,000 娛樂金與測驗加碼金終究還是見底了。不過因為你具備正確的彩券知識，知道每次開獎都是獨立事件，你果斷關掉錢包不再追加生活費。「娛樂預算花完就停手！」你拍拍衣袖笑著離開，這堂課學得非常值得。"
+            },
+            GAMBLER_FALLACY: {
+                id: "GAMBLER_FALLACY", num: 6, title: "賭徒謬誤的警示", subtitle: "「下一把一定會中」的代價",
+                icon: "💸", badge: "BAD 警示結局", theme: "from-rose-600 via-red-600 to-orange-700",
+                hint: "達成條件：未完成測驗或測驗不及格（< 6 題），且花光預算破產（< $25）。",
+                story: "「我都連槓這麼多張了，下一張肯定會回本吧！」懷抱著這樣的心態，你在短短幾期內把所有預算全數梭哈，最後連一張 $25 的 3 星彩都買不起。站在巷口吹著晚風，福伯遞給你一張《理性購彩手冊》：「年輕人，連輸不會讓下一次變容易中獎啊！下次先做完知識測驗再來吧。」"
+            }
+        };
+
+        // ========================
+        // 遊戲狀態管理
+        // ========================
+        const state = {
+            wallet: 1000,
+            highScore: 1000,
+            round: 1,
+            totalSpent: 0,
+            totalWon: 0,
+            ticketsBought: 0,
+            currentScreen: 'INTRO',
+            returnScreen: 'MAIN_MENU',
+            introStep: 0,
+            selectedGame: '',
+            cart: [],
+            playerSelection: [],
+            playerSpecial: null,
+            ticketCount: 1,
+            manualTicketCount: 1,
+            lastResults: null,
+            selectedPrizeGame: '大樂透',
+            // 40題隨機抽題測驗狀態
+            quizCompleted: false,          // 本輪是否已領取過獎金
+            quizScore: 0,                  // 本輪最佳測驗分數（用於結局判定）
+            quizBonus: 0,                  // 本輪已領取的獎金
+            currentQuizQuestions: [],      // 目前這份試卷抽出的 10 題
+            quizUserAnswers: {},           // 目前試卷的作答紀錄
+            quizAttemptSubmitted: false,   // 目前這份試卷是否已交卷
+            quizAttemptScore: 0,           // 目前這份試卷得分
+            quizIsPractice: false,         // 目前是否為練習模式（不重複領錢）
+            drawnHistoryIds: [],           // 近期已抽過題目 ID（避免重複）
+            masteredQuizIds: [],           // 歷史答對過的題目 ID（計算 X/40 精通率）
+            unlockedEndings: [],
+            currentEnding: null,
+            newlyUnlockedEnding: false
+        };
+
+        const Storage = {
+            saveScore(score) {
+                state.highScore = Math.max(score, state.highScore);
+                try {
+                    localStorage.setItem('lottery_high_score', String(state.highScore));
+                } catch (e) {}
+            },
+            saveMasteredQuiz() {
+                try {
+                    localStorage.setItem('lottery_mastered_quiz', JSON.stringify(state.masteredQuizIds));
+                } catch (e) {}
+            },
+            unlockEnding(endingId) {
+                if (!state.unlockedEndings.includes(endingId)) {
+                    state.unlockedEndings.push(endingId);
+                    try {
+                        localStorage.setItem('lottery_unlocked_endings', JSON.stringify(state.unlockedEndings));
+                    } catch (e) {}
+                    return true;
+                }
+                return false;
+            },
+            load() {
+                try {
+                    state.highScore = parseInt(localStorage.getItem('lottery_high_score') || '1000', 10);
+                    const savedEndings = JSON.parse(localStorage.getItem('lottery_unlocked_endings') || '[]');
+                    if (Array.isArray(savedEndings)) state.unlockedEndings = savedEndings;
+                    const savedMastered = JSON.parse(localStorage.getItem('lottery_mastered_quiz') || '[]');
+                    if (Array.isArray(savedMastered)) state.masteredQuizIds = savedMastered;
+                } catch (e) {
+                    state.highScore = 1000;
+                    state.unlockedEndings = [];
+                    state.masteredQuizIds = [];
+                }
+            }
+        };
+
+        // ========================
+        // 抽題工具（40 題不重複優先隨機抽 10 題）
+        // ========================
+        function shuffleArray(arr) {
+            const copy = [...arr];
+            for (let i = copy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            return copy;
+        }
+
+        function drawQuizSet(isPractice = false) {
+            let unseen = QUIZ_BANK.filter(q => !state.drawnHistoryIds.includes(q.id));
+            let picked = [];
+
+            if (unseen.length >= QUIZ_DRAW_COUNT) {
+                picked = shuffleArray(unseen).slice(0, QUIZ_DRAW_COUNT);
+            } else {
+                picked = [...unseen];
+                const pickedIds = new Set(picked.map(q => q.id));
+                state.drawnHistoryIds = [];
+                const remainingPool = shuffleArray(QUIZ_BANK.filter(q => !pickedIds.has(q.id)));
+                picked = picked.concat(remainingPool.slice(0, QUIZ_DRAW_COUNT - picked.length));
+                picked = shuffleArray(picked);
+            }
+
+            picked.forEach(q => {
+                if (!state.drawnHistoryIds.includes(q.id)) state.drawnHistoryIds.push(q.id);
+            });
+
+            state.currentQuizQuestions = picked;
+            state.quizUserAnswers = {};
+            state.quizAttemptSubmitted = false;
+            state.quizAttemptScore = 0;
+            state.quizIsPractice = isPractice;
+        }
+
+        // ========================
+        // 彩券抽獎與獎金計算邏輯
+        // ========================
+        const LotteryLogic = {
+            draw(type, isPlayerAction = false, manualCount = null) {
+                switch (type) {
+                    case "大樂透": {
+                        let b49 = this.sample(1, 49, 7);
+                        return {
+                            main: b49.slice(0, 6).sort((a, b) => a - b),
+                            special: isPlayerAction ? null : b49[6]
+                        };
+                    }
+                    case "威力彩":
+                        return { main: this.sample(1, 38, 6).sort((a, b) => a - b), special: Math.floor(Math.random() * 8) + 1 };
+                    case "今彩539":
+                        return { main: this.sample(1, 39, 5).sort((a, b) => a - b), special: null };
+                    case "3星彩":
+                        return { main: Array.from({ length: 3 }, () => Math.floor(Math.random() * 10)), special: null };
+                    case "4星彩":
+                        return { main: Array.from({ length: 4 }, () => Math.floor(Math.random() * 10)), special: null };
+                    case "BINGO":
+                        return { main: this.sample(1, 80, isPlayerAction ? (manualCount || 10) : 20).sort((a, b) => a - b), special: null };
+                }
+            },
+            sample(min, max, count) {
+                let arr = Array.from({ length: max - min + 1 }, (_, i) => i + min);
+                return shuffleArray(arr).slice(0, count);
+            }
+        };
+
+        const PrizeCalculator = {
+            calculate(type, player, drawn) {
+                const matchCount = (a, b) => a.filter(n => b.includes(n)).length;
+                const m = matchCount(player.nums, drawn.main);
+
+                switch (type) {
+                    case "大樂透": {
+                        let s = player.nums.includes(drawn.special);
+                        if (m === 6) return 100000000;
+                        if (m === 5 && s) return 2000000;
+                        if (m === 5) return 50000;
+                        if (m === 4 && s) return 15000;
+                        if (m === 4) return 2000;
+                        if (m === 3 && s) return 1000;
+                        if (m === 3) return 400;
+                        if (m === 2 && s) return 400;
+                        return 0;
+                    }
+                    case "威力彩": {
+                        let s = player.special === drawn.special;
+                        if (m === 6 && s) return 200000000;
+                        if (m === 6) return 20000000;
+                        if (m === 5 && s) return 150000;
+                        if (m === 5) return 20000;
+                        if (m === 4 && s) return 4000;
+                        if (m === 4) return 800;
+                        if (m === 3 && s) return 400;
+                        if (m === 3) return 200;
+                        if (m === 2 && s) return 200;
+                        if (m === 1 && s) return 100;
+                        if (m === 0 && s) return 100;
+                        return 0;
+                    }
+                    case "今彩539":
+                        if (m === 5) return 8000000;
+                        if (m === 4) return 20000;
+                        if (m === 3) return 300;
+                        if (m === 2) return 50;
+                        return 0;
+                    case "3星彩": {
+                        const p = player.nums;
+                        const d = drawn.main;
+                        if (p[0] === d[0] && p[1] === d[1] && p[2] === d[2]) return 5000;
+                        if (p[1] === d[1] && p[2] === d[2]) return 500;
+                        if (p[2] === d[2]) return 50;
+                        return 0;
+                    }
+                    case "4星彩": {
+                        const p = player.nums;
+                        const d = drawn.main;
+                        if (p[0] === d[0] && p[1] === d[1] && p[2] === d[2] && p[3] === d[3]) return 50000;
+                        if (p[1] === d[1] && p[2] === d[2] && p[3] === d[3]) return 5000;
+                        if (p[2] === d[2] && p[3] === d[3]) return 500;
+                        return 0;
+                    }
+                    case "BINGO":
+                        return m >= 5 ? 500 * m : 0;
+                }
+                return 0;
+            }
+        };
+
+        // ========================
+        // 工具與音樂控制
+        // ========================
+        function getCartTotalCost() {
+            return state.cart.reduce((s, t) => s + (["3星彩", "4星彩"].includes(t.type) ? 25 : 50), 0);
+        }
+
+        function getGamePrice(type) {
+            return ["3星彩", "4星彩"].includes(type) ? 25 : 50;
+        }
+
+        let toastTimer = null;
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.style.opacity = 1;
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => t.style.opacity = 0, 2400);
+        }
+
+        function updateHeader() {
+            document.getElementById('wallet-display').innerText = `$${state.wallet.toLocaleString()}`;
+            document.getElementById('high-score-display').innerText = `$${state.highScore.toLocaleString()}`;
+            const displayRound = Math.min(state.round, MAX_ROUNDS);
+            document.getElementById('day-badge').innerText = `第 ${displayRound} / ${MAX_ROUNDS} 期`;
+            document.getElementById('ending-count-badge').innerText = `${state.unlockedEndings.length}/${Object.keys(ENDINGS).length}`;
+
+            const pct = Math.min(100, Math.round((state.wallet / 3000) * 100));
+            document.getElementById('goal-bar').style.width = `${pct}%`;
+
+            // 更新頂部知識測驗按鈕徽章
+            const navQuizBtn = document.getElementById('nav-quiz-btn');
+            const navQuizBadge = document.getElementById('nav-quiz-badge');
+            if (navQuizBtn && navQuizBadge) {
+                if (state.quizCompleted) {
+                    navQuizBtn.className = "bg-white/15 hover:bg-white/25 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all active:scale-95 flex items-center gap-1.5";
+                    navQuizBadge.className = "bg-emerald-400 text-indigo-950 px-1.5 py-0.5 rounded-full text-[10px] font-black";
+                    navQuizBadge.innerText = `${state.masteredQuizIds.length}/${QUIZ_BANK.length}`;
+                } else {
+                    navQuizBtn.className = "bg-amber-400 hover:bg-amber-300 text-indigo-950 text-xs font-black px-3 py-2 rounded-xl transition-all shadow-sm active:scale-95 flex items-center gap-1.5";
+                    navQuizBadge.className = "bg-indigo-900 text-amber-300 px-1.5 py-0.5 rounded-full text-[10px]";
+                    navQuizBadge.innerText = "+$500";
+                }
+            }
+        }
+
+        const bgm = document.getElementById('bgm');
+        const musicIcon = document.getElementById('music-icon');
+        let isMusicPlaying = false;
+        bgm.volume = 0.3;
+
+        function toggleMusic() {
+            if (isMusicPlaying) {
+                bgm.pause();
+                musicIcon.innerText = '🔇';
+                isMusicPlaying = false;
+            } else {
+                const playPromise = bgm.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        musicIcon.innerText = '🎵';
+                        isMusicPlaying = true;
+                    }).catch(() => {
+                        showToast("找不到 bgm.mp3 或瀏覽器尚未允許播放音訊");
+                    });
+                }
+            }
+        }
+
+        // ========================
+        // 動態劇情對話（福伯）
+        // ========================
+        function getShopkeeperDialogue() {
+            if (state.wallet < 25) {
+                if (!state.quizCompleted) {
+                    return {
+                        mood: "😰",
+                        text: "哎呀，荷包連一張 $25 的彩券都買不起了！點上方或右邊的「知識測驗」，從 40 題題庫抽 10 題作答，最高能領 $500 喔！"
+                    };
+                }
+                return {
+                    mood: "😔",
+                    text: "這期預算已經見底了呢... 沒關係，這本來就是娛樂預算，點擊「提早結算結局」看看這趟旅程的總結吧。"
+                };
+            }
+            if (state.wallet >= 100000) {
+                return {
+                    mood: "🤩",
+                    text: "天啊！！你已經累積超過十萬獎金了！現在直接按「提早結算結局」就能解鎖傳說結局，見好就收最聰明！"
+                };
+            }
+            if (state.round === MAX_ROUNDS) {
+                return {
+                    mood: "⏳",
+                    text: "今天是 7 日試煉的「最後一期」了！要再小試一把，還是見好就收，就看你這一輪的決定囉！"
+                };
+            }
+            if (state.wallet >= 3000) {
+                return {
+                    mood: "😄",
+                    text: "手氣超旺！資產已經突破 $3,000 目標線啦！想繼續衝大獎，或是現在就見好就收鎖定贏家結局都可以喔！"
+                };
+            }
+            if (state.wallet <= 250) {
+                return {
+                    mood: "🧐",
+                    text: "餘額有點緊張囉... 千萬別陷入「賭徒謬誤」想一次翻本！控制好張數，或是隨時點上方的「知識測驗」補充觀念與資金吧。"
+                };
+            }
+            if (state.quizCompleted && state.round === 1 && state.totalSpent === 0) {
+                return {
+                    mood: "👍",
+                    text: `測驗拿到 $${state.quizBonus} 加碼金，觀念很棒喔！除了買彩券，你也能隨時回測驗抽新題挑戰全部 40 題題庫！`
+                };
+            }
+            if (state.round === 1) {
+                return {
+                    mood: "😊",
+                    text: "歡迎光臨幸運星彩券行！隨時都能點上方「📝 知識測驗」從 40 題題庫抽題領最高 $500，也能先挑喜歡的彩券試手氣！"
+                };
+            }
+            return {
+                mood: "🙂",
+                text: `目前來到第 ${state.round} 期，累計做公益投入 $${state.totalSpent.toLocaleString()}。保持平常心，祝你好運！`
+            };
+        }
+
+        // ========================
+        // 畫面渲染主入口
+        // ========================
+        function render() {
+            const container = document.getElementById('screen-content');
+            container.scrollTop = 0;
+            updateHeader();
+
+            switch (state.currentScreen) {
+                case 'INTRO':
+                    renderIntro(container);
+                    break;
+                case 'MAIN_MENU':
+                    renderMainMenu(container);
+                    break;
+                case 'PLAYING':
+                    renderGamePlay(container);
+                    break;
+                case 'RESULTS':
+                    renderResults(container);
+                    break;
+                case 'QUIZ':
+                    renderQuiz(container);
+                    break;
+                case 'RULES':
+                    renderRules(container);
+                    break;
+                case 'ENDING':
+                    renderEnding(container);
+                    break;
+                case 'GALLERY':
+                    renderGallery(container);
+                    break;
+            }
+        }
+
+        // ========================
+        // 1. 開頭劇情與引導畫面
+        // ========================
+        function renderIntro(container) {
+            const steps = [
+                {
+                    badge: "序章｜巷口的霓虹燈",
+                    icon: "🏪",
+                    title: "幸運星公益彩券行的七日之約",
+                    content: `
+                        <p class="text-slate-600 leading-relaxed mb-4">
+                            週五下班後，剛領完薪水的你從錢包抽出 <strong class="text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">$1,000 元閒置娛樂預算</strong>，路過巷口燈火通明的「幸運星公益彩券行」。
+                        </p>
+                        <div class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-xl text-left mb-4">
+                            <div class="flex items-center gap-2 font-bold text-amber-800 mb-1">
+                                <span class="text-xl">👴</span> 老闆「福伯」笑著遞上一杯熱茶：
+                            </div>
+                            <p class="text-amber-900/90 text-sm leading-relaxed">
+                                「年輕人，歡迎來參加我們店裡的『7日理性與夢想試煉』！買彩券既能支持社會公益，也能買一個小小的夢想——但要小心別掉進『賭徒謬誤』的陷阱裡喔！」
+                            </p>
+                        </div>
+                        <p class="text-xs text-slate-400">你的每一次投注選擇、是否完成理財與機率知識測驗，以及何時懂得停手，都將引導你走向截然不同的結局。</p>
+                    `
+                },
+                {
+                    badge: "目標設定｜你想寫下哪種結局？",
+                    icon: "🎯",
+                    title: "三大核心目標與 6 種多結局",
+                    content: `
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-left mb-4">
+                            <div class="bg-white border border-indigo-100 p-4 rounded-2xl shadow-sm">
+                                <div class="text-2xl mb-2">💰</div>
+                                <div class="font-bold text-slate-800 mb-1">目標一：累積資產</div>
+                                <p class="text-xs text-slate-500 leading-relaxed">7 期內挑戰突破 <strong class="text-indigo-600">$3,000</strong> 成為贏家，甚至搏一把 <strong class="text-amber-600">$100,000+</strong> 傳說大獎！</p>
+                            </div>
+                            <div class="bg-white border border-indigo-100 p-4 rounded-2xl shadow-sm">
+                                <div class="text-2xl mb-2">📝</div>
+                                <div class="font-bold text-slate-800 mb-1">目標二：40 題隨機測驗</div>
+                                <p class="text-xs text-slate-500 leading-relaxed">隨時可點頂部「知識測驗」，從 40 題機率、謬誤與理財題庫隨機抽 10 題，每答對送 <strong class="text-emerald-600">$50</strong>（最高 $500）！</p>
+                            </div>
+                            <div class="bg-white border border-indigo-100 p-4 rounded-2xl shadow-sm">
+                                <div class="text-2xl mb-2">⚖️</div>
+                                <div class="font-bold text-slate-800 mb-1">目標三：理性止損</div>
+                                <p class="text-xs text-slate-500 leading-relaxed">每結帳開獎算 1 期（共 7 期），隨時可點擊<strong class="text-rose-600">「提早結算結局」</strong>見好就收，避免破產。</p>
+                            </div>
+                        </div>
+                        <div class="text-xs bg-indigo-50 text-indigo-700 px-4 py-2.5 rounded-xl font-medium">
+                            🏆 提示：共有 <strong>6 種不同結局</strong> 可收集（含 1 個隱藏真結局），每次重玩都能嘗試不同策略！
+                        </div>
+                    `
+                },
+                {
+                    badge: "操作引導｜4 步驟輕鬆上手",
+                    icon: "🧭",
+                    title: "快速玩法教學",
+                    content: `
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left mb-3">
+                            <div class="flex items-start gap-3 bg-white p-3.5 rounded-2xl border border-slate-200">
+                                <span class="w-7 h-7 rounded-full bg-indigo-600 text-white font-black text-sm flex items-center justify-center flex-shrink-0">1</span>
+                                <div>
+                                    <div class="font-bold text-sm text-slate-800">挑選彩券遊戲</div>
+                                    <p class="text-xs text-slate-500 mt-0.5">大樂透、威力彩等每注 $50；3星/4星彩每注只要 $25。</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 bg-white p-3.5 rounded-2xl border border-slate-200">
+                                <span class="w-7 h-7 rounded-full bg-indigo-600 text-white font-black text-sm flex items-center justify-center flex-shrink-0">2</span>
+                                <div>
+                                    <div class="font-bold text-sm text-slate-800">自選或機選加入購物車</div>
+                                    <p class="text-xs text-slate-500 mt-0.5">可連續加入多張彩券，畫面不閃爍，選好再一次回大廳結帳。</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 bg-white p-3.5 rounded-2xl border border-slate-200">
+                                <span class="w-7 h-7 rounded-full bg-amber-500 text-white font-black text-sm flex items-center justify-center flex-shrink-0">3</span>
+                                <div>
+                                    <div class="font-bold text-sm text-slate-800">結帳開獎推進期數</div>
+                                    <p class="text-xs text-slate-500 mt-0.5">回首頁按「確定購買並開獎」，系統立即對獎並推進下一期。</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 bg-white p-3.5 rounded-2xl border border-slate-200">
+                                <span class="w-7 h-7 rounded-full bg-emerald-500 text-white font-black text-sm flex items-center justify-center flex-shrink-0">4</span>
+                                <div>
+                                    <div class="font-bold text-sm text-slate-800">隨時開啟知識測驗</div>
+                                    <p class="text-xs text-slate-500 mt-0.5">不限時機！點擊上方或右側「知識測驗」，領完獎金還能抽新題練習。</p>
+                                </div>
+                            </div>
+                        </div>
+                    `
+                }
+            ];
+
+            const step = steps[state.introStep];
+            const isLast = state.introStep === steps.length - 1;
+
+            container.innerHTML = `
+                <div class="h-full flex items-center justify-center fade-in">
+                    <div class="w-full max-w-2xl bg-white rounded-3xl border-2 border-indigo-100 shadow-xl p-6 md:p-8 text-center relative">
+                        <button type="button" onclick="changeScreen('MAIN_MENU')"
+                            class="absolute top-5 right-5 text-xs font-bold text-slate-400 hover:text-indigo-600 transition-colors">
+                            跳過引導 ✕
+                        </button>
+
+                        <div class="flex justify-center gap-2 mb-5">
+                            ${steps.map((_, i) => `
+                                <button type="button" onclick="state.introStep=${i}; render()"
+                                    class="h-2 rounded-full transition-all ${i === state.introStep ? 'w-8 bg-indigo-600' : 'w-2 bg-slate-200 hover:bg-indigo-300'}"></button>
+                            `).join('')}
+                        </div>
+
+                        <span class="inline-block bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full mb-3">${step.badge}</span>
+                        <div class="text-5xl mb-3">${step.icon}</div>
+                        <h1 class="text-2xl md:text-3xl font-black text-slate-800 mb-5">${step.title}</h1>
+
+                        <div class="mb-7">${step.content}</div>
+
+                        <div class="flex justify-between items-center pt-4 border-t border-slate-100">
+                            <button type="button" onclick="if(state.introStep > 0){ state.introStep--; render(); }"
+                                class="px-5 py-2.5 rounded-xl font-bold text-sm transition-colors ${state.introStep === 0 ? 'invisible' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+                                ← 上一步
+                            </button>
+
+                            ${isLast ? `
+                                <button type="button" onclick="changeScreen('MAIN_MENU')"
+                                    class="bg-gradient-to-r from-indigo-600 to-violet-600 text-white px-8 py-3 rounded-full font-black text-base shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all">
+                                    🚀 開始 7 日挑戰！
+                                </button>
+                            ` : `
+                                <button type="button" onclick="state.introStep++; render()"
+                                    class="bg-indigo-600 text-white px-7 py-2.5 rounded-full font-bold text-sm shadow-md hover:bg-indigo-700 active:scale-95 transition-all">
+                                    下一步 →
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ========================
+        // 2. 主選單畫面（含購物車局部更新）
+        // ========================
+        function buildMainCartListHtml() {
+            if (state.cart.length === 0) {
+                return `
+                    <div class="text-center py-6 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                        <p class="text-slate-400 text-sm font-bold">購物車目前是空的，點擊上方任一彩券開始選號吧！</p>
+                    </div>
+                `;
+            }
+            return state.cart.map((t, idx) => `
+                <div class="p-2.5 bg-slate-50 border border-slate-200/80 rounded-xl flex justify-between items-center hover:bg-white transition-colors">
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <span class="text-[10px] font-black bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-md">#${idx + 1}</span>
+                        <span class="font-bold text-sm text-slate-800 w-16">${t.type}</span>
+                        <div class="flex gap-1 flex-wrap">
+                            ${t.nums.map(n => `<span class="text-xs font-mono w-6 h-6 bg-white border border-slate-300 rounded-full flex items-center justify-center font-bold text-slate-700">${n}</span>`).join('')}
+                            ${t.special ? `<span class="text-xs font-mono w-6 h-6 bg-rose-50 border border-rose-300 text-rose-600 rounded-full flex items-center justify-center font-bold">${t.special}</span>` : ''}
+                        </div>
+                    </div>
+                    <button type="button" onclick="deleteCartItem(${idx})" title="移除此張"
+                        class="w-7 h-7 bg-rose-100 text-rose-500 rounded-full hover:bg-rose-500 hover:text-white transition-colors flex items-center justify-center font-bold text-sm flex-shrink-0 ml-2">
+                        ×
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function updateMainCartUI() {
+            const listEl = document.getElementById('main-cart-list');
+            const countEl = document.getElementById('main-cart-count');
+            const clearBtn = document.getElementById('main-cart-clear-btn');
+            const checkoutCostEl = document.getElementById('main-checkout-cost');
+
+            if (listEl) listEl.innerHTML = buildMainCartListHtml();
+            if (countEl) countEl.innerText = `${state.cart.length} 注`;
+            if (clearBtn) clearBtn.style.display = state.cart.length > 0 ? 'inline-block' : 'none';
+            if (checkoutCostEl) checkoutCostEl.innerText = `$${getCartTotalCost().toLocaleString()}`;
+        }
+
+        function renderMainMenu(container) {
+            const cartCost = getCartTotalCost();
+            const dialogue = getShopkeeperDialogue();
+
+            const goalWealthDone = state.wallet >= 3000;
+            const goalQuizDone = state.quizCompleted;
+            const goalSafeDone = state.wallet >= 1000 && state.quizCompleted && state.quizScore >= 8 && state.totalSpent <= 500;
+
+            container.innerHTML = `
+                <div class="flex flex-col lg:flex-row gap-5 h-full fade-in">
+                    <!-- 左側主操作區 -->
+                    <div class="flex-grow flex flex-col gap-4 overflow-y-auto scroll-container pr-1">
+
+                        <!-- 福伯劇情對話列 -->
+                        <div class="bg-white border-2 border-amber-200/80 rounded-2xl p-4 shadow-sm flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center text-2xl flex-shrink-0 border border-amber-200">
+                                ${dialogue.mood}
+                            </div>
+                            <div class="flex-grow">
+                                <div class="flex items-center gap-2 mb-0.5">
+                                    <span class="text-xs font-black text-amber-700 bg-amber-100 px-2 py-0.5 rounded-md">福伯的櫃檯叮嚀</span>
+                                    <span class="text-xs text-slate-400 font-medium">第 ${Math.min(state.round, MAX_ROUNDS)} / ${MAX_ROUNDS} 期</span>
+                                </div>
+                                <p class="text-sm text-slate-700 font-medium leading-relaxed">${dialogue.text}</p>
+                            </div>
+                        </div>
+
+                        <!-- 彩券遊戲選擇網格 -->
+                        <div>
+                            <div class="flex justify-between items-end mb-2.5 px-1">
+                                <h2 class="text-lg font-black text-slate-800 flex items-center gap-2">
+                                    <span>🎟️</span> 選擇投注彩券
+                                </h2>
+                                <button type="button" onclick="changeScreen('RULES')" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors">
+                                    📜 玩法與獎金表
+                                </button>
+                            </div>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                ${GAMES.map(g => `
+                                    <button type="button" onclick="selectGame('${g.name}')"
+                                        class="bg-gradient-to-br ${g.color} border-2 p-3.5 rounded-2xl text-left shadow-sm hover:shadow-md transition-all active:scale-95 flex flex-col justify-between group">
+                                        <div class="flex justify-between items-start w-full mb-2">
+                                            <span class="text-2xl group-hover:scale-110 transition-transform">${g.icon}</span>
+                                            <span class="text-xs font-black bg-white/90 text-slate-700 px-2 py-0.5 rounded-full shadow-sm">$${g.price}/注</span>
+                                        </div>
+                                        <div>
+                                            <div class="font-black text-lg text-slate-800">${g.name}</div>
+                                            <div class="text-[11px] text-slate-500 font-medium mt-0.5">${g.desc}</div>
+                                        </div>
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <!-- 購物車區塊 -->
+                        <div class="bg-white border-2 border-indigo-100 rounded-2xl p-4 shadow-sm flex flex-col">
+                            <div class="flex justify-between items-center mb-3">
+                                <div class="flex items-center gap-2">
+                                    <h3 class="text-base font-black text-indigo-900">🛒 本期購物車</h3>
+                                    <span id="main-cart-count" class="text-xs font-bold bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">${state.cart.length} 注</span>
+                                </div>
+                                <button type="button" id="main-cart-clear-btn" onclick="clearCart()"
+                                    style="display: ${state.cart.length > 0 ? 'inline-block' : 'none'}"
+                                    class="text-xs text-rose-500 hover:text-rose-700 font-bold">
+                                    清空購物車
+                                </button>
+                            </div>
+
+                            <div id="main-cart-list" class="space-y-2 max-h-44 overflow-y-auto scroll-container pr-1 mb-4">
+                                ${buildMainCartListHtml()}
+                            </div>
+
+                            <div class="flex flex-wrap gap-3 pt-3 border-t border-slate-100">
+                                <button type="button" onclick="checkout()"
+                                    class="flex-grow bg-gradient-to-r from-amber-500 to-orange-500 text-white px-6 py-3 rounded-xl font-black text-base shadow-md hover:shadow-lg hover:brightness-105 active:scale-[0.98] transition-all">
+                                    🎲 確定購買並開獎（共 <span id="main-checkout-cost">$${cartCost.toLocaleString()}</span>）
+                                </button>
+                                <button type="button" onclick="confirmEarlyEnding()"
+                                    class="bg-slate-800 hover:bg-slate-900 text-white px-5 py-3 rounded-xl font-bold text-sm shadow-sm active:scale-95 transition-all">
+                                    🏁 提早結算結局
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 右側資訊與任務欄 -->
+                    <aside class="w-full lg:w-80 flex-shrink-0 flex flex-col gap-4">
+                        <!-- 40題隨機知識測驗入口卡 -->
+                        <div class="bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-700 text-white rounded-2xl p-5 shadow-lg relative overflow-hidden">
+                            <div class="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full"></div>
+                            <div class="relative z-10">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-xs font-black bg-amber-400 text-indigo-950 px-2.5 py-0.5 rounded-full">
+                                        ${state.quizCompleted ? `本輪最高 ${state.quizScore}/10｜已精通 ${state.masteredQuizIds.length}/40` : '40題抽10題｜最高 +$500'}
+                                    </span>
+                                    <span class="text-xl">📝</span>
+                                </div>
+                                <h3 class="text-lg font-black mb-1">機率・謬誤・理財測驗</h3>
+                                <p class="text-xs text-indigo-100 leading-relaxed mb-4">
+                                    ${state.quizCompleted
+                                        ? `已領取本輪 $${state.quizBonus} 加碼金！隨時可再抽新題挑戰全部 40 題題庫。`
+                                        : '涵蓋機率直覺、賭徒謬誤與個人理財 40 題題庫！任何時候都能點開作答賺資金。'}
+                                </p>
+                                <button type="button" onclick="openQuiz()"
+                                    class="w-full py-2.5 rounded-xl font-black text-sm shadow-md transition-all active:scale-95 ${state.quizCompleted ? 'bg-white/20 hover:bg-white/30 text-white border border-white/30' : 'bg-amber-400 hover:bg-amber-300 text-indigo-950'}">
+                                    ${state.quizCompleted ? '🎲 進入題庫／再抽 10 題練習 →' : '✏️ 立即抽題作答領獎金 →'}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="bg-white border-2 border-indigo-100 rounded-2xl p-4 shadow-sm">
+                            <h3 class="font-black text-sm text-slate-800 mb-3 flex items-center gap-1.5">
+                                <span>🎯</span> 本輪目標進度
+                            </h3>
+                            <ul class="space-y-2.5 text-xs">
+                                <li class="flex items-start gap-2.5 p-2 rounded-xl ${goalWealthDone ? 'bg-emerald-50 text-emerald-800' : 'bg-slate-50 text-slate-600'}">
+                                    <span class="text-base leading-none">${goalWealthDone ? '✅' : '⬜'}</span>
+                                    <div>
+                                        <div class="font-bold">資產突破 $3,000</div>
+                                        <div class="text-[11px] opacity-80">目前 $${state.wallet.toLocaleString()} / $3,000</div>
+                                    </div>
+                                </li>
+                                <li class="flex items-start gap-2.5 p-2 rounded-xl ${goalQuizDone ? 'bg-emerald-50 text-emerald-800' : 'bg-slate-50 text-slate-600'}">
+                                    <span class="text-base leading-none">${goalQuizDone ? '✅' : '⬜'}</span>
+                                    <div>
+                                        <div class="font-bold">完成知識測驗（40 題抽 10 題）</div>
+                                        <div class="text-[11px] opacity-80">${goalQuizDone ? `最高 ${state.quizScore}/10 題（已領 +$${state.quizBonus}）` : '尚未作答（隨時可點，最高 +$500）'}</div>
+                                    </div>
+                                </li>
+                                <li class="flex items-start gap-2.5 p-2 rounded-xl ${goalSafeDone ? 'bg-violet-50 text-violet-800' : 'bg-slate-50 text-slate-600'}">
+                                    <span class="text-base leading-none">${goalSafeDone ? '✨' : '🔒'}</span>
+                                    <div>
+                                        <div class="font-bold">隱藏結局條件提示</div>
+                                        <div class="text-[11px] opacity-80">測驗 8 題以上 + 節制花費 + 守住本金</div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm mt-auto">
+                            <div class="text-xs font-black text-slate-400 uppercase tracking-wider mb-2.5">本輪試煉帳本</div>
+                            <div class="grid grid-cols-2 gap-2 text-center">
+                                <div class="bg-slate-50 p-2 rounded-xl">
+                                    <div class="text-[11px] text-slate-400">累計投入</div>
+                                    <div class="font-black text-slate-700 text-sm">$${state.totalSpent.toLocaleString()}</div>
+                                </div>
+                                <div class="bg-slate-50 p-2 rounded-xl">
+                                    <div class="text-[11px] text-slate-400">累計中獎</div>
+                                    <div class="font-black text-rose-600 text-sm">$${state.totalWon.toLocaleString()}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+            `;
+        }
+
+        // ========================
+        // 3. 40 題隨機抽題知識測驗（隨時可開、可重抽、無刷新）
+        // ========================
+        function openQuiz() {
+            if (state.currentScreen !== 'QUIZ') {
+                const safeReturns = ['MAIN_MENU', 'PLAYING', 'RESULTS', 'RULES'];
+                state.returnScreen = safeReturns.includes(state.currentScreen) ? state.currentScreen : 'MAIN_MENU';
+            }
+            if (state.currentQuizQuestions.length === 0) {
+                drawQuizSet(state.quizCompleted);
+            }
+            state.currentScreen = 'QUIZ';
+            render();
+        }
+
+        function returnFromQuiz() {
+            const target = state.returnScreen || 'MAIN_MENU';
+            state.currentScreen = target;
+            render();
+        }
+
+        function getAnsweredQuizCount() {
+            return state.currentQuizQuestions.filter(q => (state.quizUserAnswers[q.id] || []).length > 0).length;
+        }
+
+        function buildQuizOptionButton(q, opt, isReview) {
+            const userAns = state.quizUserAnswers[q.id] || [];
+            const isSelected = userAns.includes(opt.v);
+            const isMulti = q.type === 'multi';
+            const isRightOption = q.answer.includes(opt.v);
+
+            let cardClass = 'border-slate-200 bg-slate-50/50 hover:border-indigo-300 hover:bg-indigo-50/40 text-slate-700';
+            let indicatorHtml = '';
+
+            if (isReview) {
+                if (isRightOption && isSelected) {
+                    cardClass = 'border-emerald-500 bg-emerald-50 text-emerald-900 font-bold';
+                    indicatorHtml = '<span class="w-5 h-5 rounded-full bg-emerald-500 text-white text-xs flex items-center justify-center font-black flex-shrink-0">✓</span>';
+                } else if (isRightOption && !isSelected) {
+                    cardClass = 'border-emerald-400 border-dashed bg-emerald-50/60 text-emerald-900 font-bold';
+                    indicatorHtml = '<span class="w-5 h-5 rounded-full border-2 border-emerald-500 text-emerald-600 text-[10px] flex items-center justify-center font-black flex-shrink-0">正</span>';
+                } else if (!isRightOption && isSelected) {
+                    cardClass = 'border-rose-400 bg-rose-50 text-rose-800 font-medium';
+                    indicatorHtml = '<span class="w-5 h-5 rounded-full bg-rose-500 text-white text-xs flex items-center justify-center font-black flex-shrink-0">✕</span>';
+                } else {
+                    cardClass = 'border-slate-200 bg-slate-50/40 text-slate-400';
+                    indicatorHtml = '<span class="w-5 h-5 rounded-full border-2 border-slate-200 flex-shrink-0"></span>';
+                }
+            } else {
+                if (isSelected) {
+                    cardClass = isMulti
+                        ? 'border-amber-500 bg-amber-50 text-amber-950 font-bold shadow-sm'
+                        : 'border-indigo-600 bg-indigo-50 text-indigo-950 font-bold shadow-sm';
+                    indicatorHtml = isMulti
+                        ? '<span class="w-5 h-5 rounded-md bg-amber-500 text-white text-xs flex items-center justify-center font-black flex-shrink-0">✓</span>'
+                        : '<span class="w-5 h-5 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center font-black flex-shrink-0">●</span>';
+                } else {
+                    indicatorHtml = isMulti
+                        ? '<span class="w-5 h-5 rounded-md border-2 border-slate-300 bg-white flex-shrink-0"></span>'
+                        : '<span class="w-5 h-5 rounded-full border-2 border-slate-300 bg-white flex-shrink-0"></span>';
+                }
+            }
+
+            return `
+                <button type="button"
+                    id="opt-${q.id}-${opt.v}"
+                    ${isReview ? 'disabled' : `onclick="selectQuizOption('${q.id}', '${opt.v}')"`}
+                    class="w-full text-left flex items-center gap-3 p-3.5 rounded-xl border-2 transition-all ${cardClass} ${isReview ? 'cursor-default' : 'cursor-pointer active:scale-[0.99]'}">
+                    ${indicatorHtml}
+                    <span class="w-6 h-6 rounded-lg bg-white border border-slate-200 text-xs font-black text-slate-600 flex items-center justify-center flex-shrink-0">
+                        ${opt.v}
+                    </span>
+                    <span class="text-sm flex-grow leading-snug">${opt.t}</span>
+                    ${isReview && isRightOption ? '<span class="text-[11px] font-black text-emerald-600 flex-shrink-0">正確選項</span>' : ''}
+                </button>
+            `;
+        }
+
+        function renderQuiz(container) {
+            if (state.currentQuizQuestions.length === 0) {
+                drawQuizSet(state.quizCompleted);
+            }
+
+            const questions = state.currentQuizQuestions;
+            const isReview = state.quizAttemptSubmitted;
+            const answeredCount = getAnsweredQuizCount();
+            const pct = Math.round((answeredCount / questions.length) * 100);
+            const returnLabelMap = {
+                MAIN_MENU: "返回彩券行大廳",
+                PLAYING: `返回 ${state.selectedGame} 選號`,
+                RESULTS: "返回開獎結果",
+                RULES: "返回玩法說明"
+            };
+            const backLabel = returnLabelMap[state.returnScreen] || "返回遊戲";
+
+            container.innerHTML = `
+                <div class="max-w-3xl mx-auto pb-10 fade-in">
+                    <!-- 頂部控制列 -->
+                    <div class="flex flex-wrap justify-between items-center gap-2 mb-5">
+                        <button type="button" onclick="returnFromQuiz()"
+                            class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-100 transition-colors shadow-sm">
+                            ← ${backLabel}
+                        </button>
+                        <div class="flex items-center flex-wrap gap-2">
+                            ${!isReview ? `
+                                <button type="button" onclick="redrawQuizNow()"
+                                    class="text-xs font-bold text-indigo-700 hover:bg-indigo-100 bg-indigo-50 border border-indigo-200 px-3 py-1.5 rounded-xl transition-colors">
+                                    🎲 換一批 10 題
+                                </button>
+                                <button type="button" onclick="resetQuizAnswers()"
+                                    class="text-xs font-bold text-slate-500 hover:text-rose-600 bg-white border border-slate-200 px-3 py-1.5 rounded-xl transition-colors">
+                                    🔄 清除重填
+                                </button>
+                            ` : `
+                                <button type="button" onclick="startPracticeQuiz()"
+                                    class="text-xs font-black text-white bg-indigo-600 hover:bg-indigo-700 px-3.5 py-1.5 rounded-xl shadow-sm transition-colors">
+                                    🎲 再抽 10 題挑戰
+                                </button>
+                            `}
+                            <span class="text-xs font-bold bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-full">
+                                題庫精通 ${state.masteredQuizIds.length} / ${QUIZ_BANK.length} 題
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- 表單封面標題卡 -->
+                    <div class="bg-gradient-to-r ${state.quizIsPractice ? 'from-slate-700 to-indigo-700' : 'from-indigo-600 to-violet-600'} text-white rounded-3xl p-6 shadow-lg mb-6">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div>
+                                <div class="flex items-center gap-2 mb-1.5">
+                                    <span class="text-[11px] font-black px-2.5 py-0.5 rounded-full ${state.quizIsPractice ? 'bg-sky-300 text-slate-900' : 'bg-amber-400 text-indigo-950'}">
+                                        ${state.quizIsPractice ? '練習模式（本輪獎金已領，挑戰 40 題全精通！）' : '獎金模式（每答對 1 題送 $50，最高 +$500）'}
+                                    </span>
+                                </div>
+                                <h2 class="text-2xl md:text-3xl font-black">📝 彩券機率・謬誤・理財測驗</h2>
+                                <p class="text-sm text-indigo-100 mt-1.5">從 40 題精選題庫隨機抽出 10 題（含單選與複選），涵蓋數學機率、行為心理與理財觀念。</p>
+                            </div>
+                            ${isReview ? `
+                                <div class="bg-white/15 backdrop-blur-sm border border-white/25 rounded-2xl px-5 py-3 text-center flex-shrink-0">
+                                    <div class="text-xs text-indigo-100">本次得分</div>
+                                    <div class="text-3xl font-black text-amber-300">${state.quizAttemptScore} <span class="text-base text-white">/ 10</span></div>
+                                    <div class="text-xs font-bold text-emerald-300">
+                                        ${state.quizIsPractice ? '練習完成！' : `獲得 +$${state.quizAttemptScore * 50}`}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        ${!isReview ? `
+                            <!-- 即時進度條與題號快速導覽 -->
+                            <div class="mt-5 bg-black/20 rounded-2xl p-3.5">
+                                <div class="flex justify-between text-xs font-bold mb-1.5">
+                                    <span>本卷作答進度（點題號可快速跳轉）</span>
+                                    <span id="quiz-progress-text">${answeredCount} / ${questions.length} 題</span>
+                                </div>
+                                <div class="w-full h-2 bg-black/30 rounded-full overflow-hidden mb-3">
+                                    <div id="quiz-progress-bar" class="h-full bg-gradient-to-r from-amber-300 to-emerald-400 transition-all duration-300" style="width: ${pct}%"></div>
+                                </div>
+                                <div class="flex gap-1.5 flex-wrap" id="quiz-nav-dots">
+                                    ${questions.map((q, idx) => {
+                                        const done = (state.quizUserAnswers[q.id] || []).length > 0;
+                                        return `
+                                            <button type="button" id="dot-${q.id}" onclick="scrollToQuizCard('${q.id}')"
+                                                class="w-7 h-7 rounded-lg text-xs font-black transition-all ${done ? 'bg-emerald-400 text-indigo-950' : 'bg-white/15 text-white hover:bg-white/30'}">
+                                                ${idx + 1}
+                                            </button>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- 知識重點小卡 -->
+                    <div class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 mb-6 shadow-sm flex gap-3.5 items-start">
+                        <div class="w-10 h-10 rounded-2xl bg-amber-400/20 text-xl flex items-center justify-center flex-shrink-0">💡</div>
+                        <div class="text-xs sm:text-sm text-amber-900/90 leading-relaxed">
+                            <strong class="text-amber-950">核心觀念提示：</strong>
+                            每次開獎皆為<strong>獨立隨機事件</strong>（連輸不會提高下期中獎率，此為「賭徒謬誤」；連贏也不代表手氣會延續，此為「熱手謬誤」）。將彩券視為閒錢娛樂，搭配儲蓄、緊急預備金與分散投資，才是真正的致富之道！
+                        </div>
+                    </div>
+
+                    <!-- 10 題卡片清單 -->
+                    <div class="space-y-5">
+                        ${questions.map((q, idx) => {
+                            const isMulti = q.type === 'multi';
+                            const catInfo = CATEGORY_STYLE[q.category] || { icon: "📌", badge: "bg-slate-100 text-slate-700" };
+                            const userAns = [...(state.quizUserAnswers[q.id] || [])].sort();
+                            const correctAns = [...q.answer].sort();
+                            const isCorrect = isReview && userAns.length === correctAns.length && userAns.every((v, i) => v === correctAns[i]);
+
+                            return `
+                                <div id="card-${q.id}" class="bg-white rounded-2xl border-2 p-5 shadow-sm transition-all ${isReview ? (isCorrect ? 'border-emerald-300 bg-emerald-50/20' : 'border-rose-300 bg-rose-50/20') : 'border-slate-200/80'}">
+                                    <div class="flex items-start gap-3 mb-4">
+                                        <span class="w-8 h-8 rounded-xl ${isMulti ? 'bg-amber-500' : 'bg-indigo-600'} text-white font-black text-sm flex items-ce
