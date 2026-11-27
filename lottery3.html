@@ -1600,4 +1600,1052 @@
                             return `
                                 <div id="card-${q.id}" class="bg-white rounded-2xl border-2 p-5 shadow-sm transition-all ${isReview ? (isCorrect ? 'border-emerald-300 bg-emerald-50/20' : 'border-rose-300 bg-rose-50/20') : 'border-slate-200/80'}">
                                     <div class="flex items-start gap-3 mb-4">
-                                        <span class="w-8 h-8 rounded-xl ${isMulti ? 'bg-amber-500' : 'bg-indigo-600'} text-white font-black text-sm flex items-ce
+                                        <span class="w-8 h-8 rounded-xl ${isMulti ? 'bg-amber-500' : 'bg-indigo-600'} text-white font-black text-sm flex items-center justify-center flex-shrink-0 mt-0.5">
+                                            ${idx + 1}
+                                        </span>
+                                        <div class="flex-grow">
+                                            <div class="flex items-center flex-wrap gap-1.5 mb-1.5">
+                                                <span class="text-[11px] font-bold px-2 py-0.5 rounded-md ${catInfo.badge}">
+                                                    ${catInfo.icon} ${q.category}
+                                                </span>
+                                                <span class="text-[11px] font-bold px-2 py-0.5 rounded-md ${isMulti ? 'bg-amber-100 text-amber-800' : 'bg-indigo-100 text-indigo-700'}">
+                                                    ${isMulti ? '複選題（可多選）' : '單選題'}
+                                                </span>
+                                                ${isReview ? `
+                                                    <span class="text-[11px] font-black px-2 py-0.5 rounded-md ${isCorrect ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
+                                                        ${isCorrect ? (state.quizIsPractice ? '✓ 答對' : '✓ 答對 (+$50)') : `✗ 答錯（正解：${q.answer.join('、')}）`}
+                                                    </span>
+                                                ` : ''}
+                                            </div>
+                                            <h4 class="font-bold text-slate-800 text-base leading-snug">${q.question}</h4>
+                                        </div>
+                                    </div>
+
+                                    <div id="opts-${q.id}" class="grid grid-cols-1 gap-2.5 pl-0 sm:pl-11">
+                                        ${q.options.map(opt => buildQuizOptionButton(q, opt, isReview)).join('')}
+                                    </div>
+
+                                    ${isReview ? `
+                                        <div class="mt-3 sm:ml-11 bg-slate-100/90 text-slate-600 text-xs p-3 rounded-xl leading-relaxed">
+                                            <strong class="text-slate-800">📌 觀念解析：</strong>${q.explain}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `;
+                        }).join('')}
+
+                        <!-- 底部送出列 -->
+                        <div class="sticky bottom-2 bg-white/95 backdrop-blur-md border-2 border-indigo-100 rounded-2xl p-4 shadow-xl flex flex-wrap justify-between items-center gap-3 z-10">
+                            ${isReview ? `
+                                <div class="text-sm font-bold text-slate-600">
+                                    本次答對 <span class="text-indigo-600 font-black">${state.quizAttemptScore}/10</span> 題｜題庫已精通 <span class="text-emerald-600 font-black">${state.masteredQuizIds.length}/${QUIZ_BANK.length}</span> 題
+                                </div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button" onclick="startPracticeQuiz()"
+                                        class="bg-amber-400 hover:bg-amber-300 text-indigo-950 px-5 py-2.5 rounded-xl font-black text-sm shadow-sm transition-all">
+                                        🎲 再抽 10 題練習
+                                    </button>
+                                    <button type="button" onclick="returnFromQuiz()"
+                                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl font-black text-sm shadow-md transition-all">
+                                        ${backLabel}
+                                    </button>
+                                </div>
+                            ` : `
+                                <div id="quiz-footer-status" class="text-xs text-slate-500 font-bold">
+                                    目前已完成 ${answeredCount} / ${questions.length} 題
+                                </div>
+                                <button type="button" onclick="submitQuiz()"
+                                    class="bg-gradient-to-r from-indigo-600 to-violet-600 text-white px-8 py-3 rounded-xl font-black text-base shadow-lg hover:shadow-xl hover:brightness-105 active:scale-95 transition-all">
+                                    ${state.quizIsPractice ? '✅ 送出對答案' : '💰 送出測驗並領取獎勵'}
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function selectQuizOption(qId, optVal) {
+            if (state.quizAttemptSubmitted) return;
+            const q = state.currentQuizQuestions.find(item => item.id === qId);
+            if (!q) return;
+
+            const current = state.quizUserAnswers[qId] ? [...state.quizUserAnswers[qId]] : [];
+            if (q.type === 'single') {
+                state.quizUserAnswers[qId] = [optVal];
+            } else {
+                const idx = current.indexOf(optVal);
+                if (idx >= 0) current.splice(idx, 1);
+                else current.push(optVal);
+                state.quizUserAnswers[qId] = current.sort();
+            }
+
+            // 局部更新該題選項與進度條（不刷新整頁）
+            const optsContainer = document.getElementById(`opts-${qId}`);
+            if (optsContainer) {
+                optsContainer.innerHTML = q.options.map(opt => buildQuizOptionButton(q, opt, false)).join('');
+            }
+
+            const card = document.getElementById(`card-${qId}`);
+            const hasAns = (state.quizUserAnswers[qId] || []).length > 0;
+            if (card && hasAns) {
+                card.classList.remove('border-rose-400', 'ring-2', 'ring-rose-200');
+                card.classList.add('border-slate-200/80');
+            }
+
+            const dot = document.getElementById(`dot-${qId}`);
+            if (dot) {
+                dot.className = `w-7 h-7 rounded-lg text-xs font-black transition-all ${hasAns ? 'bg-emerald-400 text-indigo-950' : 'bg-white/15 text-white hover:bg-white/30'}`;
+            }
+
+            const answeredCount = getAnsweredQuizCount();
+            const total = state.currentQuizQuestions.length;
+            const pct = Math.round((answeredCount / total) * 100);
+            const bar = document.getElementById('quiz-progress-bar');
+            const txt = document.getElementById('quiz-progress-text');
+            const footer = document.getElementById('quiz-footer-status');
+            if (bar) bar.style.width = `${pct}%`;
+            if (txt) txt.innerText = `${answeredCount} / ${total} 題`;
+            if (footer) footer.innerText = answeredCount === total
+                ? `✅ 全部 ${total} 題都填完囉，可以送出了！`
+                : `目前已完成 ${answeredCount} / ${total} 題`;
+        }
+
+        function scrollToQuizCard(qId) {
+            const card = document.getElementById(`card-${qId}`);
+            if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function resetQuizAnswers() {
+            state.quizUserAnswers = {};
+            render();
+            showToast("已清除本卷所有作答內容");
+        }
+
+        function redrawQuizNow() {
+            drawQuizSet(state.quizIsPractice);
+            render();
+            showToast("已從 40 題題庫重新抽出 10 道新題目！");
+        }
+
+        function startPracticeQuiz() {
+            drawQuizSet(true);
+            render();
+            showToast("已抽出 10 道新題目，開始練習吧！");
+        }
+
+        function submitQuiz() {
+            if (state.quizAttemptSubmitted) return;
+
+            const questions = state.currentQuizQuestions;
+            for (let i = 0; i < questions.length; i++) {
+                const q = questions[i];
+                const ans = state.quizUserAnswers[q.id] || [];
+                if (ans.length === 0) {
+                    const card = document.getElementById(`card-${q.id}`);
+                    if (card) {
+                        card.classList.remove('border-slate-200/80');
+                        card.classList.add('border-rose-400', 'ring-2', 'ring-rose-200');
+                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    showToast(`第 ${i + 1} 題尚未作答喔！`);
+                    return;
+                }
+            }
+
+            let correctCount = 0;
+            questions.forEach(q => {
+                const userAns = [...(state.quizUserAnswers[q.id] || [])].sort();
+                const correctAns = [...q.answer].sort();
+                if (userAns.length === correctAns.length && userAns.every((v, idx) => v === correctAns[idx])) {
+                    correctCount++;
+                    if (!state.masteredQuizIds.includes(q.id)) {
+                        state.masteredQuizIds.push(q.id);
+                    }
+                }
+            });
+            Storage.saveMasteredQuiz();
+
+            state.quizAttemptSubmitted = true;
+            state.quizAttemptScore = correctCount;
+
+            if (!state.quizIsPractice && !state.quizCompleted) {
+                const bonus = correctCount * 50;
+                state.wallet += bonus;
+                Storage.saveScore(state.wallet);
+                state.quizCompleted = true;
+                state.quizScore = correctCount;
+                state.quizBonus = bonus;
+                showToast(`測驗完成！答對 ${correctCount} / 10 題，獲得 $${bonus} 獎勵！`);
+            } else {
+                state.quizScore = Math.max(state.quizScore, correctCount);
+                showToast(`練習完成！答對 ${correctCount} / 10 題（已精通 ${state.masteredQuizIds.length}/40 題）`);
+            }
+
+            render();
+        }
+
+        // ========================
+        // 4. 選號投注畫面（全程局部 DOM 更新，絕不刷新閃爍）
+        // ========================
+        function buildSidebarCartPreviewHtml() {
+            if (state.cart.length === 0) {
+                return `<p class="text-[11px] text-slate-400 text-center py-2">尚未加入彩券</p>`;
+            }
+            const recent = state.cart.slice(-3).reverse();
+            return recent.map(t => `
+                <div class="flex justify-between items-center text-[11px] bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100">
+                    <span class="font-bold text-slate-700">${t.type} ${t.isAuto ? '(機)' : '(自)'}</span>
+                    <span class="font-mono text-slate-500 truncate max-w-[130px]">${t.nums.join(',')}${t.special ? '+' + t.special : ''}</span>
+                </div>
+            `).join('');
+        }
+
+        function updatePlaySidebarCart(animate = false) {
+            const countEl = document.getElementById('sidebar-cart-count');
+            const costEl = document.getElementById('sidebar-cart-cost');
+            const previewEl = document.getElementById('sidebar-cart-preview');
+
+            if (countEl) {
+                countEl.innerText = `${state.cart.length} 張`;
+                if (animate) {
+                    countEl.classList.remove('pop-badge');
+                    void countEl.offsetWidth;
+                    countEl.classList.add('pop-badge');
+                }
+            }
+            if (costEl) costEl.innerText = `$${getCartTotalCost().toLocaleString()}`;
+            if (previewEl) previewEl.innerHTML = buildSidebarCartPreviewHtml();
+        }
+
+        function updatePlayCountersUI() {
+            const price = getGamePrice(state.selectedGame);
+            const tcEl = document.getElementById('ticket-count-val');
+            const tcPriceEl = document.getElementById('auto-add-price');
+            const mcEl = document.getElementById('manual-count-val');
+            const mcPriceEl = document.getElementById('manual-add-price');
+
+            if (tcEl) tcEl.innerText = `${state.ticketCount} 張`;
+            if (tcPriceEl) tcPriceEl.innerText = `$${(state.ticketCount * price).toLocaleString()}`;
+            if (mcEl) mcEl.innerText = `${state.manualTicketCount} 張`;
+            if (mcPriceEl) mcPriceEl.innerText = `$${(state.manualTicketCount * price).toLocaleString()}`;
+        }
+
+        function updateSelectionDisplayUI() {
+            if (["3星彩", "4星彩"].includes(state.selectedGame)) {
+                const starEl = document.getElementById('star-display');
+                if (starEl) {
+                    const placeholder = state.selectedGame === '4星彩' ? '— — — —' : '— — —';
+                    starEl.innerText = state.playerSelection.length > 0 ? state.playerSelection.join(' ') : placeholder;
+                }
+            } else {
+                const statusEl = document.getElementById('selection-status-bar');
+                if (statusEl) {
+                    if (state.playerSelection.length > 0) {
+                        const sorted = [...state.playerSelection].sort((a, b) => a - b);
+                        statusEl.innerHTML = `
+                            <span class="text-indigo-700 font-bold">已選 ${sorted.length} 號：<span class="font-mono">${sorted.join(', ')}</span></span>
+                            <button type="button" onclick="clearCurrentSelection()" class="text-rose-500 font-bold hover:underline">清除已選</button>
+                        `;
+                    } else {
+                        statusEl.innerHTML = `<span class="text-slate-400">尚未自選號碼（可直接點擊球號，或使用右側快速機選）</span>`;
+                    }
+                }
+            }
+        }
+
+        function renderGamePlay(container) {
+            let maxBalls = 49;
+            let pickHint = "請選取 6 個號碼";
+            if (state.selectedGame === "威力彩") { maxBalls = 38; pickHint = "第一區選 6 號 + 第二區選 1 號"; }
+            if (state.selectedGame === "今彩539") { maxBalls = 39; pickHint = "請選取 5 個號碼"; }
+            if (state.selectedGame === "BINGO") { maxBalls = 80; pickHint = "可選 1 ~ 10 個號碼（中 5 號以上即有獎）"; }
+            if (state.selectedGame === "3星彩") { pickHint = "依序點擊輸入 3 個數字 (0-9)"; }
+            if (state.selectedGame === "4星彩") { pickHint = "依序點擊輸入 4 個數字 (0-9)"; }
+
+            const ticketPrice = getGamePrice(state.selectedGame);
+
+            let ballHtml = "";
+            if (["3星彩", "4星彩"].includes(state.selectedGame)) {
+                ballHtml = `
+                    <div class="text-center p-6 bg-white rounded-2xl border-2 border-indigo-100 shadow-sm">
+                        <div id="star-display" class="text-4xl font-mono font-black tracking-[0.4em] bg-indigo-50 text-indigo-700 p-5 rounded-2xl mb-6 border-2 border-indigo-100">
+                            ${state.playerSelection.length > 0 ? state.playerSelection.join(' ') : (state.selectedGame === '4星彩' ? '— — — —' : '— — —')}
+                        </div>
+                        <div class="grid grid-cols-5 gap-2.5 max-w-sm mx-auto">
+                            ${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `
+                                <button type="button" onclick="pickStarNum(${n})"
+                                    class="bg-slate-100 p-3.5 rounded-xl hover:bg-indigo-600 hover:text-white font-black text-xl transition-all active:scale-90 shadow-sm">
+                                    ${n}
+                                </button>
+                            `).join('')}
+                        </div>
+                        <button type="button" onclick="clearCurrentSelection()" class="mt-5 text-rose-500 hover:text-rose-700 font-bold underline text-sm">
+                            清除重選
+                        </button>
+                    </div>
+                `;
+            } else {
+                ballHtml = `
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="grid grid-cols-7 sm:grid-cols-10 gap-2">
+                            ${Array.from({ length: maxBalls }, (_, i) => i + 1).map(n => `
+                                <button type="button" id="ball-${n}" onclick="toggleBall(${n})"
+                                    class="ball w-9 h-9 sm:w-10 sm:h-10 mx-auto flex items-center justify-center border-2 rounded-full font-bold text-sm ${state.playerSelection.includes(n) ? 'ball-selected' : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-indigo-300'}">
+                                    ${n}
+                                </button>
+                            `).join('')}
+                        </div>
+                        <div id="selection-status-bar" class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-xs min-h-[28px]">
+                            <span class="text-slate-400">尚未自選號碼（可直接點擊球號，或使用右側快速機選）</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = `
+                <div class="flex flex-col lg:flex-row h-full gap-5 fade-in">
+                    <div class="flex-grow overflow-y-auto scroll-container pr-1">
+                        <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
+                            <div>
+                                <h2 class="text-2xl font-black text-slate-800">投注遊戲：<span class="text-indigo-600">${state.selectedGame}</span></h2>
+                                <p class="text-xs text-slate-500 font-medium mt-0.5">${pickHint}（每注 $${ticketPrice}）</p>
+                            </div>
+                            <button type="button" onclick="changeScreen('MAIN_MENU')"
+                                class="px-4 py-2 bg-white border border-slate-200 rounded-xl font-bold text-sm text-slate-600 hover:bg-slate-100 transition-colors shadow-sm">
+                                ← 返回大廳結帳
+                            </button>
+                        </div>
+
+                        ${ballHtml}
+
+                        ${state.selectedGame === "威力彩" ? `
+                            <div class="mt-4 p-4 bg-rose-50 border-2 border-rose-200 rounded-2xl">
+                                <h3 class="font-black text-sm mb-3 text-rose-700">🔴 第二區特別號（必選 1 號，1 ~ 8）：</h3>
+                                <div class="flex gap-2.5 flex-wrap">
+                                    ${[1, 2, 3, 4, 5, 6, 7, 8].map(n => `
+                                        <button type="button" id="special-ball-${n}" onclick="pickSpecialBall(${n})"
+                                            class="ball w-10 h-10 flex items-center justify-center border-2 rounded-full font-black text-sm ${state.playerSpecial === n ? 'special-selected' : 'bg-white border-rose-200 text-rose-700 hover:border-rose-400'}">
+                                            ${n}
+                                        </button>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <aside class="w-full lg:w-72 bg-white p-5 border-2 border-indigo-100 rounded-2xl shadow-sm flex flex-col gap-3.5 flex-shrink-0">
+                        <div class="bg-indigo-50/70 p-3.5 rounded-xl border border-indigo-100">
+                            <label class="text-xs font-black text-indigo-700 block mb-2 uppercase tracking-wider">⚡ Quick Pick 快速機選</label>
+                            <div class="flex items-center gap-2 mb-2.5">
+                                <button type="button" onclick="adjust('ticketCount', -1)" class="bg-white border border-indigo-200 w-9 h-9 rounded-lg hover:bg-indigo-100 font-black">-</button>
+                                <span id="ticket-count-val" class="flex-grow text-center font-black text-lg text-indigo-700">${state.ticketCount} 張</span>
+                                <button type="button" onclick="adjust('ticketCount', 1)" class="bg-white border border-indigo-200 w-9 h-9 rounded-lg hover:bg-indigo-100 font-black">+</button>
+                            </div>
+                            <button type="button" onclick="addAutoToCart()"
+                                class="w-full py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 active:scale-95 transition-all shadow-md text-sm">
+                                🎲 機選加入購物車 (<span id="auto-add-price">$${(state.ticketCount * ticketPrice).toLocaleString()}</span>)
+                            </button>
+                        </div>
+
+                        <div class="bg-emerald-50/70 p-3.5 rounded-xl border border-emerald-100">
+                            <label class="text-xs font-black text-emerald-700 block mb-2 uppercase tracking-wider">✋ 自選號碼張數</label>
+                            <div class="flex items-center gap-2 mb-2.5">
+                                <button type="button" onclick="adjust('manualTicketCount', -1)" class="bg-white border border-emerald-200 w-9 h-9 rounded-lg hover:bg-emerald-100 font-black">-</button>
+                                <span id="manual-count-val" class="flex-grow text-center font-black text-lg text-emerald-700">${state.manualTicketCount} 張</span>
+                                <button type="button" onclick="adjust('manualTicketCount', 1)" class="bg-white border border-emerald-200 w-9 h-9 rounded-lg hover:bg-emerald-100 font-black">+</button>
+                            </div>
+                            <button type="button" onclick="addManualToCart()"
+                                class="w-full py-2.5 bg-emerald-500 text-white rounded-xl font-bold hover:bg-emerald-600 active:scale-95 transition-all shadow-md text-sm">
+                                ✅ 自選加入購物車 (<span id="manual-add-price">$${(state.manualTicketCount * ticketPrice).toLocaleString()}</span>)
+                            </button>
+                        </div>
+
+                        <div class="mt-auto pt-3 border-t border-slate-100">
+                            <div class="flex justify-between items-center text-xs mb-2">
+                                <span class="font-bold text-slate-500">購物車累計：</span>
+                                <div class="flex items-center gap-2">
+                                    <span id="sidebar-cart-count" class="inline-block font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">${state.cart.length} 張</span>
+                                    <span id="sidebar-cart-cost" class="font-black text-amber-600">$${getCartTotalCost().toLocaleString()}</span>
+                                </div>
+                            </div>
+                            <div id="sidebar-cart-preview" class="space-y-1 mb-3">
+                                ${buildSidebarCartPreviewHtml()}
+                            </div>
+                            <button type="button" onclick="changeScreen('MAIN_MENU')"
+                                class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-black text-sm shadow-sm transition-colors">
+                                前往首頁確認結帳 →
+                            </button>
+                        </div>
+                    </aside>
+                </div>
+            `;
+
+            updateSelectionDisplayUI();
+        }
+
+        // ========================
+        // 5. 開獎結果畫面（任何狀態都能自由開啟測驗）
+        // ========================
+        function renderResults(container) {
+            const { tickets, totalCost, totalWon, drawnPool, roundNumber } = state.lastResults;
+            const net = totalWon - totalCost;
+            const isFinalRoundDone = state.round > MAX_ROUNDS;
+            const isBankrupt = state.wallet < 25;
+
+            let reactionMsg = "有中沒中都開心，公益彩券讓社會更美好！";
+            if (totalWon >= 50000) reactionMsg = "哇靠！！中大獎啦！！這手氣簡直逆天，記得冷靜理財喔！";
+            else if (net > 0) reactionMsg = "漂亮！這期有賺到喔，見好就收也是贏家的好習慣！";
+            else if (totalWon > 0) reactionMsg = "有中小獎回血一點點，繼續保持輕鬆心態吧！";
+            else reactionMsg = "這期槓龜了～別氣餒，也別因為沒中就衝動加碼喔！";
+
+            container.innerHTML = `
+                <div class="max-w-3xl mx-auto pb-6 fade-in">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-black text-slate-800">🎉 第 ${roundNumber} 期開獎結果</h2>
+                        <span class="text-xs font-bold bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full">
+                            ${isFinalRoundDone ? '7 期試煉已完成' : `下一期：第 ${state.round} / ${MAX_ROUNDS} 期`}
+                        </span>
+                    </div>
+
+                    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-3.5 mb-5 flex items-center gap-3 text-sm text-amber-900 font-medium">
+                        <span class="text-2xl">👴</span>
+                        <span>「${reactionMsg}」</span>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-3 mb-6">
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-center">
+                            <p class="text-xs text-slate-400 font-bold mb-1">本期成本</p>
+                            <p class="text-xl font-black text-slate-700">$${totalCost.toLocaleString()}</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-center">
+                            <p class="text-xs text-slate-400 font-bold mb-1">本期總獎金</p>
+                            <p class="text-xl font-black text-rose-600">$${totalWon.toLocaleString()}</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-center">
+                            <p class="text-xs text-slate-400 font-bold mb-1">淨損益</p>
+                            <p class="text-xl font-black ${net >= 0 ? 'text-emerald-600' : 'text-slate-500'}">${net >= 0 ? '+' : ''}$${net.toLocaleString()}</p>
+                        </div>
+                    </div>
+
+                    <h3 class="font-black text-sm text-slate-500 mb-2.5">📢 官方開獎號碼</h3>
+                    <div class="space-y-2 mb-6">
+                        ${Object.entries(drawnPool).map(([game, drawn]) => `
+                            <div class="bg-indigo-50/90 p-3.5 rounded-2xl flex justify-between items-center border border-indigo-100 gap-2">
+                                <span class="font-black text-indigo-800 text-sm flex-shrink-0">${game}</span>
+                                <div class="flex gap-1.5 flex-wrap justify-end">
+                                    ${drawn.main.map(n => `<span class="bg-indigo-600 text-white w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold shadow-sm">${n}</span>`).join('')}
+                                    ${drawn.special ? `<span class="bg-rose-500 text-white w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold shadow-sm ring-2 ring-rose-200">${drawn.special}</span>` : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <h3 class="font-black text-sm text-slate-500 mb-2.5">🎫 您的對獎明細（共 ${tickets.length} 張）</h3>
+                    <div class="space-y-2 max-h-60 overflow-y-auto scroll-container pr-1 mb-6">
+                        ${tickets.map((t, idx) => {
+                            const isWin = t.prize > 0;
+                            return `
+                                <div class="p-3 bg-white border rounded-xl flex justify-between items-center transition-all ${isWin ? 'win-card shadow-md' : 'border-slate-200 opacity-85'}">
+                                    <div class="flex flex-col">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-[10px] font-bold bg-slate-100 px-1.5 py-0.5 rounded text-slate-500">第 ${idx + 1} 張</span>
+                                            <span class="font-bold text-sm text-slate-800">${t.type}</span>
+                                        </div>
+                                        <div class="flex gap-1 mt-1.5 flex-wrap">
+                                            ${t.nums.map(n => `<span class="text-xs font-mono w-6 h-6 bg-slate-50 border border-slate-200 rounded flex items-center justify-center font-bold">${n}</span>`).join('')}
+                                            ${t.special ? `<span class="text-xs font-mono w-6 h-6 bg-rose-50 border border-rose-200 text-rose-600 rounded flex items-center justify-center font-bold">${t.special}</span>` : ''}
+                                        </div>
+                                    </div>
+                                    <div class="text-right flex-shrink-0 ml-3">
+                                        ${isWin ? `
+                                            <p class="text-xs font-black text-amber-600">🎊 中獎！</p>
+                                            <p class="text-base font-black text-rose-600">+$${t.prize.toLocaleString()}</p>
+                                        ` : `
+                                            <p class="text-xs text-slate-400">未中獎</p>
+                                            <p class="text-sm font-bold text-slate-300">$0</p>
+                                        `}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+
+                    <div class="sticky bottom-0 bg-white/95 backdrop-blur-sm border-2 border-indigo-100 rounded-2xl p-4 shadow-lg flex flex-wrap justify-center gap-3">
+                        ${isFinalRoundDone ? `
+                            <button type="button" onclick="triggerEnding('COMPLETED')"
+                                class="bg-gradient-to-r from-indigo-600 to-violet-600 text-white px-10 py-3 rounded-full font-black text-base shadow-lg hover:scale-105 transition-transform">
+                                🎬 7期挑戰結束！查看最終結局
+                            </button>
+                        ` : isBankrupt ? `
+                            <button type="button" onclick="triggerEnding('BANKRUPT')"
+                                class="bg-rose-600 hover:bg-rose-700 text-white px-8 py-3 rounded-full font-black text-sm shadow-md transition-all">
+                                💸 預算歸零，查看結局
+                            </button>
+                            ${!state.quizCompleted ? `
+                                <button type="button" onclick="openQuiz()"
+                                    class="bg-amber-400 hover:bg-amber-300 text-indigo-950 px-7 py-3 rounded-full font-black text-sm shadow-md transition-all">
+                                    📝 做知識測驗拿獎金繼續玩
+                                </button>
+                            ` : ''}
+                        ` : `
+                            <button type="button" onclick="changeScreen('MAIN_MENU')"
+                                class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-full font-black text-sm shadow-md transition-all">
+                                進入第 ${state.round} 期 →
+                            </button>
+                            ${!state.quizCompleted ? `
+                                <button type="button" onclick="openQuiz()"
+                                    class="bg-amber-400 hover:bg-amber-300 text-indigo-950 px-6 py-3 rounded-full font-black text-sm shadow-sm transition-all">
+                                    📝 做知識測驗 (+$500)
+                                </button>
+                            ` : ''}
+                            <button type="button" onclick="confirmEarlyEnding()"
+                                class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-6 py-3 rounded-full font-bold text-sm transition-all">
+                                🏁 見好就收
+                            </button>
+                        `}
+                    </div>
+                </div>
+            `;
+        }
+
+        // ========================
+        // 6. 多結局畫面
+        // ========================
+        function triggerEnding(reason) {
+            let endingKey = 'ORDINARY_CHARITY';
+
+            if (reason === 'BANKRUPT' || state.wallet < 25) {
+                if (state.quizCompleted && state.quizScore >= 6) {
+                    endingKey = 'RATIONAL_BANKRUPT';
+                } else {
+                    endingKey = 'GAMBLER_FALLACY';
+                }
+            } else {
+                if (state.wallet >= 100000) {
+                    endingKey = 'BILLIONAIRE';
+                } else if (state.quizCompleted && state.quizScore >= 8 && state.wallet >= 1000 && state.totalSpent <= 500) {
+                    endingKey = 'RATIONAL_MASTER';
+                } else if (state.wallet >= 3000) {
+                    endingKey = 'LUCKY_WINNER';
+                } else {
+                    endingKey = 'ORDINARY_CHARITY';
+                }
+            }
+
+            state.currentEnding = ENDINGS[endingKey];
+            state.newlyUnlockedEnding = Storage.unlockEnding(endingKey);
+            Storage.saveScore(state.wallet);
+            state.currentScreen = 'ENDING';
+            render();
+        }
+
+        function confirmEarlyEnding() {
+            if (state.cart.length > 0) {
+                showToast("購物車尚有未結帳彩券，已保留餘額直接為你結算結局！");
+                state.cart = [];
+            }
+            triggerEnding('EARLY');
+        }
+
+        function renderEnding(container) {
+            const end = state.currentEnding;
+            const roundsPlayed = Math.min(state.round - 1, MAX_ROUNDS);
+
+            container.innerHTML = `
+                <div class="max-w-2xl mx-auto py-4 fade-in">
+                    <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden">
+                        <div class="bg-gradient-to-br ${end.theme} text-white p-8 text-center relative">
+                            ${state.newlyUnlockedEnding ? `
+                                <span class="inline-block bg-white text-indigo-900 text-xs font-black px-3 py-1 rounded-full shadow-md mb-3 animate-bounce">
+                                    ✨ 新結局解鎖！
+                                </span>
+                            ` : ''}
+                            <div class="text-xs font-bold tracking-widest uppercase opacity-90 mb-2">ENDING 0${end.num} / 06 · ${end.badge}</div>
+                            <div class="text-7xl mb-3 drop-shadow-md">${end.icon}</div>
+                            <h1 class="text-3xl md:text-4xl font-black mb-1">${end.title}</h1>
+                            <p class="text-sm md:text-base font-medium opacity-90">${end.subtitle}</p>
+                        </div>
+
+                        <div class="p-6 md:p-8">
+                            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5 mb-6 text-slate-700 leading-relaxed text-sm md:text-base">
+                                ${end.story}
+                            </div>
+
+                            <h3 class="text-xs font-black text-slate-400 uppercase tracking-wider mb-3">本次試煉生涯成績單</h3>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-7 text-center">
+                                <div class="bg-indigo-50 p-3 rounded-2xl">
+                                    <div class="text-[11px] text-indigo-600 font-bold">最終資產</div>
+                                    <div class="text-lg font-black text-indigo-900">$${state.wallet.toLocaleString()}</div>
+                                </div>
+                                <div class="bg-slate-50 p-3 rounded-2xl">
+                                    <div class="text-[11px] text-slate-500 font-bold">累計投入</div>
+                                    <div class="text-lg font-black text-slate-700">$${state.totalSpent.toLocaleString()}</div>
+                                </div>
+                                <div class="bg-rose-50 p-3 rounded-2xl">
+                                    <div class="text-[11px] text-rose-500 font-bold">累計中獎</div>
+                                    <div class="text-lg font-black text-rose-600">$${state.totalWon.toLocaleString()}</div>
+                                </div>
+                                <div class="bg-amber-50 p-3 rounded-2xl">
+                                    <div class="text-[11px] text-amber-700 font-bold">經歷期數 / 測驗</div>
+                                    <div class="text-sm font-black text-amber-900 mt-0.5">${roundsPlayed} 期 · ${state.quizCompleted ? `${state.quizScore}/10分` : '未作答'}</div>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap justify-center gap-3">
+                                <button type="button" onclick="resetGame()"
+                                    class="bg-gradient-to-r from-indigo-600 to-violet-600 text-white px-8 py-3.5 rounded-full font-black text-base shadow-lg hover:scale-105 transition-transform">
+                                    🔄 重新開始 7 日挑戰
+                                </button>
+                                <button type="button" onclick="openGallery()"
+                                    class="bg-amber-100 hover:bg-amber-200 text-amber-900 px-6 py-3.5 rounded-full font-black text-sm transition-colors">
+                                    🏆 查看結局圖鑑 (${state.unlockedEndings.length}/6)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ========================
+        // 7. 結局圖鑑畫面
+        // ========================
+        function openGallery() {
+            if (state.currentScreen !== 'GALLERY') {
+                const safeReturns = ['MAIN_MENU', 'PLAYING', 'RESULTS', 'RULES', 'ENDING'];
+                state.returnScreen = safeReturns.includes(state.currentScreen) ? state.currentScreen : 'MAIN_MENU';
+            }
+            state.currentScreen = 'GALLERY';
+            render();
+        }
+
+        function renderGallery(container) {
+            const list = Object.values(ENDINGS);
+
+            container.innerHTML = `
+                <div class="max-w-4xl mx-auto pb-8 fade-in">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h2 class="text-2xl font-black text-slate-800">🏆 多結局收集圖鑑</h2>
+                            <p class="text-xs text-slate-500 mt-1">已解鎖 ${state.unlockedEndings.length} / ${list.length} 種結局，嘗試不同策略集滿全結局吧！</p>
+                        </div>
+                        <button type="button" onclick="state.currentScreen = state.returnScreen || 'MAIN_MENU'; render()"
+                            class="px-5 py-2.5 bg-slate-800 text-white rounded-xl font-bold text-sm hover:bg-black transition-colors">
+                            返回遊戲
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        ${list.map(end => {
+                            const unlocked = state.unlockedEndings.includes(end.id);
+                            return `
+                                <div class="rounded-2xl border-2 overflow-hidden shadow-sm transition-all ${unlocked ? 'bg-white border-indigo-200' : 'bg-slate-100/80 border-slate-200'}">
+                                    <div class="p-4 flex items-center gap-4 ${unlocked ? `bg-gradient-to-r ${end.theme} text-white` : 'bg-slate-200 text-slate-500'}">
+                                        <div class="text-4xl">${unlocked ? end.icon : '🔒'}</div>
+                                        <div>
+                                            <div class="text-[10px] font-black uppercase opacity-90">ENDING 0${end.num} · ${unlocked ? end.badge : '尚未解鎖'}</div>
+                                            <div class="text-lg font-black">${unlocked ? end.title : '？？？'}</div>
+                                        </div>
+                                    </div>
+                                    <div class="p-4 text-xs leading-relaxed">
+                                        ${unlocked ? `
+                                            <p class="text-slate-600 mb-2">${end.story}</p>
+                                            <div class="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg inline-block">${end.hint}</div>
+                                        ` : `
+                                            <p class="text-slate-400 font-bold mb-2">此結局尚未解鎖。</p>
+                                            <div class="text-[11px] text-slate-500 bg-white px-2.5 py-1.5 rounded-lg border border-slate-200">💡 解鎖提示：${end.hint}</div>
+                                        `}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // ========================
+        // 8. 玩法與獎金表畫面（局部切換）
+        // ========================
+        function renderRules(container) {
+            container.innerHTML = `
+                <div class="max-w-2xl mx-auto pb-10 fade-in">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-black text-emerald-700">📜 遊戲玩法與獎金表</h2>
+                        <button type="button" onclick="changeScreen('MAIN_MENU')"
+                            class="bg-slate-800 text-white px-5 py-2 rounded-xl font-bold text-sm hover:bg-black transition-all">
+                            返回首頁
+                        </button>
+                    </div>
+
+                    <div class="space-y-5 text-slate-700">
+                        <section class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <h3 class="font-black text-base text-indigo-700 mb-2">💰 基礎規則與 7 期試煉</h3>
+                            <ul class="list-disc ml-5 space-y-1.5 text-sm">
+                                <li>初始娛樂預算為 <strong>$1,000</strong>；大樂透、威力彩、今彩539、BINGO 每注 <strong>$50</strong>；3星/4星彩每注 <strong>$25</strong>。</li>
+                                <li>每次於首頁結帳開獎會推進 <strong>1 期</strong>，共 <strong>7 期</strong>；也可隨時選擇「提早結算結局」。</li>
+                                <li>隨時可點擊頂部「知識測驗」，從 <strong>40 題題庫</strong>中隨機抽 10 題作答，本輪首次完成每答對一題送 <strong>$50</strong>（最高 $500），之後也能不限次數抽新題練習！</li>
+                            </ul>
+                        </section>
+
+                        <section class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <h3 class="font-black text-base text-indigo-700 mb-3">🏆 各遊戲獎金對照表</h3>
+                            <div id="prize-tab-bar" class="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-4">
+                                ${GAMES.map(g => `
+                                    <button type="button" onclick="selectPrizeGame('${g.name}')"
+                                        class="py-2 text-xs font-bold rounded-xl border transition-colors ${state.selectedPrizeGame === g.name ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}">
+                                        ${g.name}
+                                    </button>
+                                `).join('')}
+                            </div>
+                            <div id="prize-table-box">
+                                ${renderPrizeTable(state.selectedPrizeGame)}
+                            </div>
+                        </section>
+
+                        <section class="bg-amber-50 p-4 rounded-2xl border border-amber-200 text-xs text-amber-800 leading-relaxed">
+                            <strong>⚠️ 注意事項：</strong> 本網頁僅供模擬娛樂與理財教育使用，不具備真實金錢博弈功能。真實生活購買公益彩券請務必量力而為。
+                        </section>
+                    </div>
+                </div>
+            `;
+        }
+
+        function selectPrizeGame(gameName) {
+            state.selectedPrizeGame = gameName;
+            const tabBar = document.getElementById('prize-tab-bar');
+            const tableBox = document.getElementById('prize-table-box');
+            if (tabBar) {
+                tabBar.innerHTML = GAMES.map(g => `
+                    <button type="button" onclick="selectPrizeGame('${g.name}')"
+                        class="py-2 text-xs font-bold rounded-xl border transition-colors ${state.selectedPrizeGame === g.name ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}">
+                        ${g.name}
+                    </button>
+                `).join('');
+            }
+            if (tableBox) tableBox.innerHTML = renderPrizeTable(gameName);
+        }
+
+        function renderPrizeTable(game) {
+            const tables = {
+                "大樂透": [
+                    ["玩法：01~49 選 6 號（開獎含 1 個特別號）", "—"],
+                    ["對中 6 個主號碼（頭獎）", "$100,000,000"],
+                    ["對中 5 個 + 特別號（貳獎）", "$2,000,000"],
+                    ["對中 5 個主號碼（參獎）", "$50,000"],
+                    ["對中 4 個 + 特別號（肆獎）", "$15,000"],
+                    ["對中 4 個主號碼（伍獎）", "$2,000"],
+                    ["對中 3 個 + 特別號（陸獎）", "$1,000"],
+                    ["對中 3 個主號碼 或 2 個 + 特別號", "$400"]
+                ],
+                "威力彩": [
+                    ["玩法：第一區 01~38 選 6 號 + 第二區 01~08 選 1 號", "—"],
+                    ["第一區 6 號 + 第二區（頭獎）", "$200,000,000"],
+                    ["第一區 6 號（貳獎）", "$20,000,000"],
+                    ["第一區 5 號 + 第二區（參獎）", "$150,000"],
+                    ["第一區 5 號（肆獎）", "$20,000"],
+                    ["第一區 4 號 + 第二區（伍獎）", "$4,000"],
+                    ["第一區 4 號（陸獎）", "$800"],
+                    ["第一區 3 號 + 第二區（柒獎）", "$400"],
+                    ["第一區 3 號 或 2 號 + 第二區", "$200"],
+                    ["第一區 0~1 號 + 第二區（普獎）", "$100"]
+                ],
+                "今彩539": [
+                    ["玩法：01~39 選 5 個號碼", "—"],
+                    ["對中 5 個號碼（頭獎）", "$8,000,000"],
+                    ["對中 4 個號碼（貳獎）", "$20,000"],
+                    ["對中 3 個號碼（參獎）", "$300"],
+                    ["對中 2 個號碼（肆獎）", "$50"]
+                ],
+                "3星彩": [
+                    ["玩法：依序選 3 個數字 (0~9)，每注 $25", "—"],
+                    ["3 碼順序全中（壹獎）", "$5,000"],
+                    ["末 2 碼對位（貳獎）", "$500"],
+                    ["末 1 碼對位（參獎）", "$50"]
+                ],
+                "4星彩": [
+                    ["玩法：依序選 4 個數字 (0~9)，每注 $25", "—"],
+                    ["4 碼順序全中（壹獎）", "$50,000"],
+                    ["末 3 碼對位（貳獎）", "$5,000"],
+                    ["末 2 碼對位（參獎）", "$500"]
+                ],
+                "BINGO": [
+                    ["玩法：01~80 選 1~10 號（每期開出 20 號）", "—"],
+                    ["對中 10 號", "$5,000"],
+                    ["對中 5 ~ 9 號", "每號 $500"]
+                ]
+            };
+
+            const data = tables[game] || [];
+            return `
+                <div class="overflow-hidden border border-slate-200 rounded-xl">
+                    <table class="w-full text-sm">
+                        <thead class="bg-indigo-50 text-indigo-800">
+                            <tr>
+                                <th class="p-2.5 text-left">中獎條件</th>
+                                <th class="p-2.5 text-right">模擬獎金</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            ${data.map((row, i) => `
+                                <tr class="${i === 0 ? 'bg-slate-50 text-xs font-bold' : ''}">
+                                    <td class="p-2.5 text-slate-600">${row[0]}</td>
+                                    <td class="p-2.5 text-right font-black ${i === 0 ? 'text-slate-400' : 'text-rose-600'}">${row[1]}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        // ========================
+        // 互動操作函式（全面無刷新更新）
+        // ========================
+        function openIntroFromNav() {
+            state.introStep = 0;
+            changeScreen('INTRO');
+        }
+
+        function changeScreen(scr) {
+            state.currentScreen = scr;
+            if (scr === 'MAIN_MENU') {
+                state.playerSelection = [];
+                state.playerSpecial = null;
+            }
+            render();
+        }
+
+        function selectGame(game) {
+            state.selectedGame = game;
+            state.playerSelection = [];
+            state.playerSpecial = null;
+            state.ticketCount = 1;
+            state.manualTicketCount = 1;
+            state.currentScreen = 'PLAYING';
+            render();
+        }
+
+        function adjust(key, val) {
+            state[key] = Math.max(1, Math.min(50, state[key] + val));
+            updatePlayCountersUI();
+        }
+
+        function toggleBall(n) {
+            let limit = 6;
+            if (state.selectedGame === "今彩539") limit = 5;
+            else if (state.selectedGame === "BINGO") limit = 10;
+
+            const ballEl = document.getElementById(`ball-${n}`);
+            if (state.playerSelection.includes(n)) {
+                state.playerSelection = state.playerSelection.filter(x => x !== n);
+                if (ballEl) {
+                    ballEl.classList.remove('ball-selected');
+                    ballEl.classList.add('bg-slate-50', 'border-slate-200', 'text-slate-700');
+                }
+            } else {
+                if (state.playerSelection.length < limit) {
+                    state.playerSelection.push(n);
+                    if (ballEl) {
+                        ballEl.classList.add('ball-selected');
+                        ballEl.classList.remove('bg-slate-50', 'border-slate-200', 'text-slate-700');
+                    }
+                } else {
+                    showToast(`${state.selectedGame} 最多只能選 ${limit} 個號碼喔！`);
+                }
+            }
+            updateSelectionDisplayUI();
+        }
+
+        function pickSpecialBall(n) {
+            if (state.playerSpecial !== null) {
+                const prevEl = document.getElementById(`special-ball-${state.playerSpecial}`);
+                if (prevEl) {
+                    prevEl.classList.remove('special-selected');
+                    prevEl.classList.add('bg-white', 'border-rose-200', 'text-rose-700');
+                }
+            }
+            state.playerSpecial = n;
+            const curEl = document.getElementById(`special-ball-${n}`);
+            if (curEl) {
+                curEl.classList.add('special-selected');
+                curEl.classList.remove('bg-white', 'border-rose-200', 'text-rose-700');
+            }
+        }
+
+        function pickStarNum(n) {
+            let limit = state.selectedGame === "3星彩" ? 3 : 4;
+            if (state.playerSelection.length < limit) {
+                state.playerSelection.push(n);
+                updateSelectionDisplayUI();
+            } else {
+                showToast(`${state.selectedGame} 的 ${limit} 位數字已填滿！`);
+            }
+        }
+
+        function clearCurrentSelection() {
+            state.playerSelection.forEach(n => {
+                const ballEl = document.getElementById(`ball-${n}`);
+                if (ballEl) {
+                    ballEl.classList.remove('ball-selected');
+                    ballEl.classList.add('bg-slate-50', 'border-slate-200', 'text-slate-700');
+                }
+            });
+            if (state.playerSpecial !== null) {
+                const spEl = document.getElementById(`special-ball-${state.playerSpecial}`);
+                if (spEl) {
+                    spEl.classList.remove('special-selected');
+                    spEl.classList.add('bg-white', 'border-rose-200', 'text-rose-700');
+                }
+            }
+            state.playerSelection = [];
+            state.playerSpecial = null;
+            updateSelectionDisplayUI();
+        }
+
+        function addAutoToCart() {
+            let currentPickCount = state.playerSelection.length;
+            if (state.selectedGame === "今彩539") currentPickCount = 5;
+            else if (state.selectedGame === "BINGO") currentPickCount = currentPickCount > 0 ? currentPickCount : 10;
+            else if (state.selectedGame === "3星彩") currentPickCount = 3;
+            else if (state.selectedGame === "4星彩") currentPickCount = 4;
+            else currentPickCount = 6;
+
+            for (let i = 0; i < state.ticketCount; i++) {
+                const autoDrawn = LotteryLogic.draw(state.selectedGame, true, currentPickCount);
+                state.cart.push({
+                    type: state.selectedGame,
+                    nums: autoDrawn.main,
+                    special: autoDrawn.special,
+                    isAuto: true
+                });
+            }
+
+            showToast(`已機選 ${state.ticketCount} 張 ${state.selectedGame} 加入購物車！`);
+            updatePlaySidebarCart(true);
+        }
+
+        function addManualToCart() {
+            let minReq = 6;
+            if (state.selectedGame === "今彩539") minReq = 5;
+            else if (state.selectedGame === "3星彩") minReq = 3;
+            else if (state.selectedGame === "4星彩") minReq = 4;
+            else if (state.selectedGame === "BINGO") minReq = 1;
+
+            if (state.playerSelection.length < minReq) {
+                showToast(`${state.selectedGame} 最少需選 ${minReq} 個號碼！`);
+                return;
+            }
+
+            if (state.selectedGame === "威力彩" && state.playerSpecial === null) {
+                showToast("請選擇威力彩第二區特別號 (1 ~ 8)！");
+                return;
+            }
+
+            for (let i = 0; i < state.manualTicketCount; i++) {
+                state.cart.push({
+                    type: state.selectedGame,
+                    nums: ["3星彩", "4星彩"].includes(state.selectedGame)
+                        ? [...state.playerSelection]
+                        : [...state.playerSelection].sort((a, b) => a - b),
+                    special: state.selectedGame === "威力彩" ? state.playerSpecial : null,
+                    isAuto: false
+                });
+            }
+
+            showToast(`已加入 ${state.manualTicketCount} 張自選 ${state.selectedGame}！`);
+            clearCurrentSelection();
+            updatePlaySidebarCart(true);
+        }
+
+        function deleteCartItem(idx) {
+            state.cart.splice(idx, 1);
+            showToast('已從購物車移除此張彩券');
+            updateMainCartUI();
+        }
+
+        function clearCart() {
+            state.cart = [];
+            showToast('已清空購物車');
+            updateMainCartUI();
+        }
+
+        function checkout() {
+            if (state.cart.length === 0) {
+                showToast("購物車是空的，請先挑選彩券號碼喔！");
+                return;
+            }
+
+            const totalCost = getCartTotalCost();
+            if (state.wallet < totalCost) {
+                showToast(`餘額不足！購物車總計 $${totalCost.toLocaleString()}，目前僅有 $${state.wallet.toLocaleString()}`);
+                return;
+            }
+
+            let finalTickets = [...state.cart];
+            const drawnPool = {};
+            const activeGames = [...new Set(finalTickets.map(t => t.type))];
+            activeGames.forEach(g => {
+                drawnPool[g] = LotteryLogic.draw(g, false);
+            });
+
+            let totalWon = 0;
+            finalTickets.forEach(t => {
+                t.prize = PrizeCalculator.calculate(t.type, t, drawnPool[t.type]);
+                totalWon += t.prize;
+            });
+
+            state.wallet = state.wallet - totalCost + totalWon;
+            state.totalSpent += totalCost;
+            state.totalWon += totalWon;
+            state.ticketsBought += finalTickets.length;
+            Storage.saveScore(state.wallet);
+
+            const currentRoundNum = state.round;
+            state.round += 1;
+
+            state.lastResults = {
+                tickets: finalTickets,
+                totalCost,
+                totalWon,
+                drawnPool,
+                roundNumber: currentRoundNum
+            };
+
+            state.cart = [];
+            changeScreen('RESULTS');
+        }
+
+        function resetGame() {
+            state.wallet = 1000;
+            state.round = 1;
+            state.totalSpent = 0;
+            state.totalWon = 0;
+            state.ticketsBought = 0;
+            state.cart = [];
+            state.playerSelection = [];
+            state.playerSpecial = null;
+            state.lastResults = null;
+            state.quizCompleted = false;
+            state.quizScore = 0;
+            state.quizBonus = 0;
+            state.currentQuizQuestions = [];
+            state.quizUserAnswers = {};
+            state.quizAttemptSubmitted = false;
+            state.quizAttemptScore = 0;
+            state.quizIsPractice = false;
+            state.currentEnding = null;
+            state.newlyUnlockedEnding = false;
+            state.currentScreen = 'MAIN_MENU';
+            showToast("已領取新的 $1,000 娛樂預算，展開新一輪 7 日試煉！");
+            render();
+        }
+
+        // 初始化載入
+        Storage.load();
+        render();
+    </script>
+</body>
+
+</html>
