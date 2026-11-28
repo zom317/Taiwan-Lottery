@@ -904,8 +904,12 @@
                         if (p[2] === d[2] && p[3] === d[3]) return 500;
                         return 0;
                     }
-                    case "BINGO":
-                        return m >= 5 ? 500 * m : 0;
+                    case "BINGO": {
+                        const playCount = player.nums.length;
+                        const prizeTable = BINGO_PRIZE_TABLE[playCount];
+                        if (!prizeTable) return 0;
+                        return prizeTable[m] || 0;
+                    }
                 }
                 return 0;
             }
